@@ -17,6 +17,6 @@ after_success:
   - export PATH=$PATH:$HOME/.local/bin
   - eval $(aws ecr get-login --region us-east-1)
   - docker build -t NosCoreBot .
-  - docker tag NosCoreBot:latest 703970026174.dkr.ecr.us-west-2.amazonaws.com/noscorebot:latest
+  - docker tag noscorebot:latest 703970026174.dkr.ecr.us-west-2.amazonaws.com/noscorebot:latest
   - docker push 703970026174.dkr.ecr.us-west-2.amazonaws.com/noscorebot:latest
   
