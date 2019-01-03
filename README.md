@@ -18,3 +18,14 @@ We are not responsible of any damages caused by bad usage of our source. Please 
 
 ### Disclaimer ###
 This project not for commercial use.
+
+## Disclaimer ##
+This project is a community project not for commercial use. The result is to learn and program together for prove the study. 
+
+## Legal ##
+This is an independent and unofficial server for educational use ONLY. Using the Project might be against the TOS.
+
+### Contribution is only possible with Visual Studio 2017 ###
+We recommend usage of : 
+* [Roslynator extension](https://github.com/JosefPihrt/Roslynator).
+* [Resharper](https://www.jetbrains.com/resharper/)
