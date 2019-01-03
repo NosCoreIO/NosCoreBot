@@ -17,5 +17,6 @@ deploy:
   region: us-west-2
   app: NosCoreBot
   env: Noscorebot-env
+  bucket_name: noscorebot
   on:
     repo: NosCoreIO/NosCoreBot
