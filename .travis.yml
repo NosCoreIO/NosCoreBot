@@ -2,7 +2,7 @@ language: csharp
 mono: none
 sudo: required
 os: windows
-dotnet: 2.2
+dotnet: 2.1
 script:
 - dotnet restore
 - dotnet build
