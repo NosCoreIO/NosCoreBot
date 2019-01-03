@@ -3,20 +3,20 @@ mono: none
 sudo: required
 dist: xenial
 dotnet: 2.2
+services:
+  - docker
 script:
-- dotnet restore
-- dotnet build
+  - dotnet restore
+  - dotnet build
 global:
-- DOTNET_SKIP_FIRST_TIME_EXPERIENCE=true
-- DOTNET_CLI_TELEMETRY_OPTOUT=1
-deploy:
-  provider: elasticbeanstalk
-  access_key_id: AKIAI2JSDXOXFASUH2ZA
-  secret_access_key:
-    secure: dtS6OQdtyKvS1x/ZMoE7PkEpwD8O3zeUr9U6vYXcPox+DaEUAoCfOXkSW4iQ13KBDtgqu5bg/BZenzKbQWYq3I3oyQHOH3HttqUcEfxD+/WI+hk68K99/1J9hehfZWFG7BCOON1LGEJ0ponfw7IUrqJk6QsKCurMk46K+MosZKtU+XHyEgsqAxL4baLKzBg5FC6Osk90K4IwHH8tYVqYFYe8JqbF19sXPBmnrAAoxfmTUQiaeMmqJVZQ0Zk61+Lde2Zp4pHtq2aONUxemplR7Qo3rlIH/tDo1Po9PZEva0KeL1cBr0a/DYW7xdCgZ4JKYbhgnntx1KhPAddUEXntSwPwhXIVRsHlBFoOD0Kyq8MYnzHP2vYmnpOAqu/iBxxP+KAyD5MTQ1UhnnnAzuF/wKl4e65+8Ga7uEbFT0479NfbHSYbRSTpN1QVq4+SLm6UJTNjok64P6GWlzYE4M31oy+/6WLvaO11AKNy0G1YyQU0LpaLGH9Gzz+zhy4jsi3+FAfxE+yfmxwXEZx3ApE/HLGssq7TyxhnmXALI9pLkJ912VvS8awxDuRMdwE4kkfK0yDMCF8l2LVVA4lwldcKxc+81j+diRtoad3Yb3NSolD5os7j7SGroXIjxeIp4FVIxkP7SCM3b0KPkSYDCxMwADLnPo+Mz/qRfBrYsg2gez4=
-  region: us-west-2
-  app: NosCoreBot
-  env: Noscorebot-env-2
-  bucket_name: noscorebot
-  on:
-    repo: NosCoreIO/NosCoreBot
+  - DOTNET_SKIP_FIRST_TIME_EXPERIENCE=true
+  - DOTNET_CLI_TELEMETRY_OPTOUT=1
+after_success:
+  - docker --version
+  - pip install --user awscli
+  - export PATH=$PATH:$HOME/.local/bin
+  - eval $(aws ecr get-login --region us-east-1)
+  - docker build -t NosCoreBot .
+  - docker tag NosCoreBot:latest 703970026174.dkr.ecr.us-west-2.amazonaws.com/noscorebot:latest
+  - docker push 703970026174.dkr.ecr.us-west-2.amazonaws.com/noscorebot:latest
+  
