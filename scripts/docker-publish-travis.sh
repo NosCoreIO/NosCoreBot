@@ -6,17 +6,13 @@ case "$TRAVIS_BRANCH" in
   "master")
     DOCKER_ENV=production
     DOCKER_TAG=latest
-    ;;
-  "develop")
-    DOCKER_ENV=development
-    DOCKER_TAG=dev
-    ;;    
+    ;;  
 esac
 
 pip install --user awscli
 aws ecr get-login --region us-west-2 --no-include-email
 
-docker build -f ./src/NosCoreBot/Dockerfile.$DOCKER_ENV -t noscorebot:$DOCKER_TAG ./src/NosCoreBot --no-cache
+docker build -f ./dockerfile -t noscorebot:$DOCKER_TAG . --no-cache
 
 docker tag noscorebot:$DOCKER_TAG $DOCKER_REGISTRY/noscorebot:$DOCKER_TAG
 
