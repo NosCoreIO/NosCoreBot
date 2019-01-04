@@ -31,10 +31,10 @@ namespace NosCoreBot.Services
 
         public async Task MessageReceivedAsync(SocketMessage rawMessage)
         {
-            if (!(rawMessage is SocketUserMessage message)) return;
-            if (message.Source != MessageSource.User) return;
+            if (!(rawMessage is SocketUserMessage message)) { return; }
+            if (message.Source != MessageSource.User) { return; }
             var argPos = 0;
-            if (!message.HasStringPrefix("/", ref argPos) && !message.HasMentionPrefix(_discord.CurrentUser, ref argPos)) return;
+            if (!message.HasStringPrefix("/", ref argPos) && !message.HasMentionPrefix(_discord.CurrentUser, ref argPos)) { return; }
 
             var context = new SocketCommandContext(_discord, message);
             await _commands.ExecuteAsync(context, argPos, _services);
@@ -42,11 +42,10 @@ namespace NosCoreBot.Services
 
         public async Task CommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, IResult result)
         {
-            if (!command.IsSpecified)
-                return;
-            
-            if (result.IsSuccess)
-                return;
+            if (!command.IsSpecified || result.IsSuccess)
+            {
+				return;
+			}
             
             await context.Channel.SendMessageAsync($"error: {result.ToString()}");
         }
