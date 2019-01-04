@@ -12,7 +12,7 @@ esac
 pip install --user awscli
 
 eval $(aws ecr get-login --region us-west-2 --no-include-email)
-docker build -f ./src/NosCoreBot/dockerfile -t noscorebot:$DOCKER_TAG . --no-cache
+docker build -f ./src/NosCoreBot/dockerfile -t noscorebot:$DOCKER_TAG ./src/NosCoreBot --no-cache
 
 docker tag noscorebot:$DOCKER_TAG $DOCKER_REGISTRY/noscorebot:$DOCKER_TAG
 
