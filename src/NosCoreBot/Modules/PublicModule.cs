@@ -9,7 +9,20 @@ namespace NosCoreBot.Modules
 {
     public class PublicModule : ModuleBase<SocketCommandContext>
     {
+        [Command("clear")]
+        [Name("clear <amount>")]
+        [Summary("Deletes a specified amount of messages")]
+        [RequireUserPermission(GuildPermission.ManageMessages)]
+        [RequireBotPermission(GuildPermission.ManageMessages)]
+        public async Task Clear(int amount)
+        {
+            var messages = await Context.Channel.GetMessagesAsync(amount).FlattenAsync();
+            await ((SocketTextChannel)Context.Channel).DeleteMessagesAsync(messages);
+        }
+
         [Command("translation")]
+        [Name("translation <language>")]
+        [Summary("Give the translator roles")]
         public async Task Translation(RegionType region)
         {
             if (Context.Channel.Name == "translation-info")
