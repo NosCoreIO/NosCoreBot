@@ -1,4 +1,4 @@
 FROM microsoft/dotnet:aspnetcore-runtime
 WORKDIR /dotnetapp
-COPY ./build/netcoreapp2.2 .
+COPY ./build .
 ENTRYPOINT ["dotnet", "NosCoreBot.dll"]

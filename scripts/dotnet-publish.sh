@@ -1,1 +1,1 @@
-dotnet publish ./src/NosCoreBot -c Release -o ./bin/Docker
+dotnet publish -c Release -o ./build

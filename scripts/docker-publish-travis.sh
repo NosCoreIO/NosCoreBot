@@ -10,8 +10,8 @@ case "$TRAVIS_BRANCH" in
 esac
 
 pip install --user awscli
-aws ecr get-login --region us-west-2 --no-include-email
 
+eval $(aws ecr get-login --region us-west-2 --no-include-email)
 docker build -f ./dockerfile -t noscorebot:$DOCKER_TAG . --no-cache
 
 docker tag noscorebot:$DOCKER_TAG $DOCKER_REGISTRY/noscorebot:$DOCKER_TAG
