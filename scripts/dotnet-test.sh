@@ -1,2 +1,2 @@
-cd tests/Fibon.Tests
+cd tests/NosCoreBot.Tests
 dotnet test
