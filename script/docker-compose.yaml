@@ -1,27 +1,5 @@
 version: "2"
 
 services:
-  start-dependencies:
-    image: dadarek/wait-for-dependencies
-    depends_on:
-      - rabbitmq
-    command: rabbitmq:5672
-
-  fibon-api:
-    image: fibon.api
-    links:
-      - rabbitmq
-    ports:
-      - '5000:5000'
-
-  fibon-service:
-    image: fibon.service
-    links:
-      - rabbitmq
-    ports:
-      - '5050:5050'
-
-  rabbitmq:
-    image: rabbitmq:latest
-    ports:
-      - '5672:5672'
+  noscorebot:
+    image: noscorebot
