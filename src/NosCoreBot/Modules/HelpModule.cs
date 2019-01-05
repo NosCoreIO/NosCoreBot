@@ -15,6 +15,7 @@ namespace NosCoreBot.Modules
         }
 
         [Command("help")]
+        [Name("help")]
         public async Task HelpAsync()
         {
             var builder = new EmbedBuilder()
@@ -30,7 +31,7 @@ namespace NosCoreBot.Modules
                 {
                     var result = await cmd.CheckPreconditionsAsync(Context);
                     if (result.IsSuccess)
-                        description += $"/{cmd.Aliases.First()}\n";
+                        description += $"/{cmd.Name}\n";
                 }
 
                 if (!string.IsNullOrWhiteSpace(description))
@@ -48,6 +49,7 @@ namespace NosCoreBot.Modules
         }
 
         [Command("help")]
+        [Name("help <name>")]
         public async Task HelpAsync(string command)
         {
             var result = _service.Search(Context, command);
@@ -72,7 +74,7 @@ namespace NosCoreBot.Modules
                 {
                     x.Name = string.Join(", ", cmd.Aliases);
                     x.Value = $"Parameters: {string.Join(", ", cmd.Parameters.Select(p => p.Name))}\n" +
-                              $"Summary: {cmd.Summary}";
+                        $"Summary: {cmd.Summary}";
                     x.IsInline = false;
                 });
             }

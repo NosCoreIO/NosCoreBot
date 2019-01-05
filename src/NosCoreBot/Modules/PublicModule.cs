@@ -12,7 +12,7 @@ namespace NosCoreBot.Modules
     public class PublicModule : ModuleBase<SocketCommandContext>
     {
         [Command("delete-message")]
-        [Name("delete <amount>")]
+        [Name("delete-message <amount>")]
         [Summary("Deletes a specified amount of messages")]
         [RequireUserPermission(GuildPermission.ManageMessages)]
         [RequireBotPermission(GuildPermission.ManageMessages)]
