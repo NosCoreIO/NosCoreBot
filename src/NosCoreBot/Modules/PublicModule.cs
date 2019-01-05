@@ -6,6 +6,7 @@ using Discord.Commands;
 using System.Threading.Tasks;
 using Discord.WebSocket;
 using NosCoreBot.Enumerations;
+using NosCoreBot.Extensions;
 
 namespace NosCoreBot.Modules
 {
@@ -20,6 +21,20 @@ namespace NosCoreBot.Modules
         {
             var messages = await Context.Channel.GetMessagesAsync(amount + 1).FlattenAsync();
             await ((SocketTextChannel)Context.Channel).DeleteMessagesAsync(messages);
+        }
+
+        [Command("clear")]
+        [Name("clear")]
+        [Summary("clear all messages")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        [RequireBotPermission(GuildPermission.Administrator)]
+        public async Task Clear()
+        {
+            var clone = (Context.Channel as ITextChannel)?.CloneChannelAsync();
+            if (clone != null)
+            {
+                await clone;
+            }
         }
 
         [Command("translation-message")]
