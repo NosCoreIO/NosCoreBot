@@ -29,4 +29,4 @@ docker tag noscorebot:$DOCKER_TAG $DOCKER_REGISTRY/noscorebot:$DOCKER_TAG
 
 docker push $DOCKER_REGISTRY/noscorebot:$DOCKER_TAG
 
-ecs-deploy -c noscorebot -n noscorebot-service -i $DOCKER_REGISTRY/noscorebot:latest
+ecs-deploy -c noscorebot -n noscorebot-service -i $DOCKER_REGISTRY/noscorebot:latest --force-new-deployment
