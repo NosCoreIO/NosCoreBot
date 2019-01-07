@@ -37,7 +37,7 @@ namespace NosCoreBot.Modules
             }
         }
 
-        [Command("translation-message")]
+        [Command("translation")]
         [Name("translation <language>")]
         [Summary("Give the translator roles")]
         public async Task Translation(RegionType region)
