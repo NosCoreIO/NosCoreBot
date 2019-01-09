@@ -12,7 +12,7 @@ namespace NosCoreBot.Modules
 {
     public class TranslationModule : ModuleBase<SocketCommandContext>
     {
-        [Command("translation-message")]
+        [Command("translation")]
         [Name("translation <language>")]
         [Summary("Give the translator roles (You have to be on #translation-info)")]
         public async Task Translation(RegionType region)
