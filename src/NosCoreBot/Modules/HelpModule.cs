@@ -27,18 +27,23 @@ namespace NosCoreBot.Modules
             foreach (var module in _service.Modules)
             {
                 string description = null;
+                string title = null;
                 foreach (var cmd in module.Commands)
                 {
                     var result = await cmd.CheckPreconditionsAsync(Context);
                     if (result.IsSuccess)
-                        description += $"/{cmd.Name}\n";
+                    {
+                        title = $"/{cmd.Name}";
+                        description += cmd.Summary;
+                    }
+                       
                 }
 
                 if (!string.IsNullOrWhiteSpace(description))
                 {
                     builder.AddField(x =>
                     {
-                        x.Name = module.Name;
+                        x.Name = title;
                         x.Value = description;
                         x.IsInline = false;
                     });
