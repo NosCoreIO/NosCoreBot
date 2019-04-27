@@ -31,6 +31,7 @@ namespace NosCoreBot.Enumerations
         PL,
         ES,
         CS,
+        RU,
         TR
     }
 }
