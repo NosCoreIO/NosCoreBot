@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Amazon;
 using Amazon.Runtime;
 using Amazon.S3;
+using Amazon.S3.Model;
 using Amazon.S3.Transfer;
 using Discord.WebSocket;
 using Newtonsoft.Json;
@@ -52,29 +53,30 @@ namespace NosCoreBot.Modules
         [RequireBotPermission(GuildPermission.Administrator)]
         public async Task ResetI18N()
         {
-            var client = new AmazonS3Client(new BasicAWSCredentials(
+            using (var client = new AmazonS3Client(new BasicAWSCredentials(
                 Environment.GetEnvironmentVariable("S3_ACCESS_KEY"),
-                Environment.GetEnvironmentVariable("S3_SECRET_KEY")), RegionEndpoint.USWest2);
-            var transferUtility = new TransferUtility(client);
-
-            var newList = new Dictionary<RegionType, List<string>>();
-            foreach (var type in Enum.GetValues(typeof(RegionType)).Cast<RegionType>())
+                Environment.GetEnvironmentVariable("S3_SECRET_KEY")), RegionEndpoint.USWest2))
             {
-                newList.Add(type, new List<string>());
-            }
 
-            var emptyfile = JsonConvert.SerializeObject(newList);
-            using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(emptyfile)))
-            {
-                var transferUtilityUploadRequest = new TransferUtilityUploadRequest
+                var newList = new Dictionary<RegionType, List<string>>();
+                foreach (var type in Enum.GetValues(typeof(RegionType)).Cast<RegionType>())
                 {
-                    BucketName = "noscoretranslation",
-                    Key = "missing_translation.json",
-                    ContentType = "text/json",
-                    InputStream = stream
-                };
+                    newList.Add(type, new List<string>());
+                }
 
-                await transferUtility.UploadAsync(transferUtilityUploadRequest);
+                var emptyfile = JsonConvert.SerializeObject(newList);
+                using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(emptyfile)))
+                {
+                    var putRequest = new PutObjectRequest
+                    {
+                        BucketName = Environment.GetEnvironmentVariable("S3_BUCKET"),
+                        Key = Environment.GetEnvironmentVariable("S3_KEY"),
+                        ContentType = "text/json",
+                        InputStream = stream
+                    };
+
+                    await client.PutObjectAsync(putRequest);
+                }
             }
         }
     }
