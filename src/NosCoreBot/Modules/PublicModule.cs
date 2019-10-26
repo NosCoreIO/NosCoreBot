@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.ComTypes;
+using System.Text;
 using Discord;
 using Discord.Commands;
 using System.Threading.Tasks;
@@ -11,6 +12,7 @@ using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Transfer;
 using Discord.WebSocket;
+using Newtonsoft.Json;
 using NosCoreBot.Enumerations;
 using NosCoreBot.Extensions;
 
@@ -55,28 +57,25 @@ namespace NosCoreBot.Modules
                 Environment.GetEnvironmentVariable("S3_SECRET_KEY")), RegionEndpoint.USWest2);
             var transferUtility = new TransferUtility(client);
 
-            var emptyfile = "{";
-            foreach (var type in Enum.GetNames(typeof(RegionType)))
+            var newList = new Dictionary<RegionType, List<string>>();
+            foreach (var type in Enum.GetValues(typeof(RegionType)).Cast<RegionType>())
             {
-                emptyfile += $"\"{type}\":[],";
+                newList.Add(type, new List<string>());
             }
-            emptyfile += "}";
 
-            MemoryStream stream = new MemoryStream();
-            StreamWriter writer = new StreamWriter(stream);
-            writer.Write(emptyfile);
-            writer.Flush();
-
-            TransferUtilityUploadRequest transferUtilityUploadRequest = new TransferUtilityUploadRequest
+            var emptyfile = JsonConvert.SerializeObject(newList);
+            using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(emptyfile)))
             {
-                BucketName = Environment.GetEnvironmentVariable("S3_BUCKET"),
-                Key = Environment.GetEnvironmentVariable("S3_KEY"),
-                FilePath = Environment.GetEnvironmentVariable("S3_PATH"),
-                ContentType = "text/plain",
-                InputStream = stream
-            };
+                var transferUtilityUploadRequest = new TransferUtilityUploadRequest
+                {
+                    BucketName = "noscoretranslation",
+                    Key = "missing_translation.json",
+                    ContentType = "text/json",
+                    InputStream = stream
+                };
 
-            await transferUtility.UploadAsync(transferUtilityUploadRequest);
+                await transferUtility.UploadAsync(transferUtilityUploadRequest);
+            }
         }
     }
 }
