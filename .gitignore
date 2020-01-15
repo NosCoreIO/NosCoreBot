@@ -497,3 +497,4 @@ fabric.properties
 # should be stored in the .pubxml.user file.
 Log.txt
 /build/netcoreapp2.*
+/build/netcoreapp3.*
