@@ -2,7 +2,15 @@ language: csharp
 mono: none
 sudo: required
 dist: xenial
-dotnet: 3.1    
+addons:
+    snaps:
+      - name: dotnet-sdk
+        confinement: classic
+        channel: 3.1/stable
+install:
+    - export PATH="$PATH:/home/travis/.dotnet/tools"
+    - export PATH="$PATH:$HOME/.local/bin"
+    - sudo snap alias dotnet-sdk.dotnet dotnet        
 branches:
   only:
     - master
