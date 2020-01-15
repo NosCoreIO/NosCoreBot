@@ -50,6 +50,7 @@ namespace NosCoreBot.Modules
                     };
 
                     await client.PutObjectAsync(putRequest);
+                    await ReplyAsync("I18N cleared!");
                 }
             }
         }
