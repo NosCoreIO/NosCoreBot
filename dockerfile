@@ -1,5 +1,4 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1-alpine
-
-WORKDIR /app
+FROM microsoft/dotnet:aspnetcore-runtime
+WORKDIR /dotnetapp
 COPY ./bin/Docker .
 ENTRYPOINT ["dotnet", "NosCoreBot.dll"]
