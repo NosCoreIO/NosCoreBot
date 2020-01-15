@@ -16,6 +16,7 @@ using Discord.WebSocket;
 using Newtonsoft.Json;
 using NosCoreBot.Enumerations;
 using NosCoreBot.Extensions;
+using NosCoreBot.Precondition;
 
 namespace NosCoreBot.Modules
 {
@@ -35,7 +36,7 @@ namespace NosCoreBot.Modules
         [Command("clear")]
         [Name("clear")]
         [Summary("clear all messages")]
-        [RequireUserPermission(GuildPermission.Administrator)]
+        [RequireUserPermissionOrWebhook(GuildPermission.Administrator, new[] { "Travis CI" })]
         [RequireBotPermission(GuildPermission.Administrator)]
         public async Task Clear()
         {
@@ -43,40 +44,6 @@ namespace NosCoreBot.Modules
             if (clone != null)
             {
                 await clone;
-            }
-        }
-
-        [Command("reset-i18n")]
-        [Name("reset-i18n")]
-        [Summary("reset i18n file")]
-        [RequireUserPermission(GuildPermission.Administrator)]
-        [RequireBotPermission(GuildPermission.Administrator)]
-        public async Task ResetI18N()
-        {
-            using (var client = new AmazonS3Client(new BasicAWSCredentials(
-                Environment.GetEnvironmentVariable("S3_ACCESS_KEY"),
-                Environment.GetEnvironmentVariable("S3_SECRET_KEY")), RegionEndpoint.USWest2))
-            {
-
-                var newList = new Dictionary<RegionType, List<string>>();
-                foreach (var type in Enum.GetValues(typeof(RegionType)).Cast<RegionType>())
-                {
-                    newList.Add(type, new List<string>());
-                }
-
-                var emptyfile = JsonConvert.SerializeObject(newList);
-                using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(emptyfile)))
-                {
-                    var putRequest = new PutObjectRequest
-                    {
-                        BucketName = Environment.GetEnvironmentVariable("S3_BUCKET"),
-                        Key = Environment.GetEnvironmentVariable("S3_KEY"),
-                        ContentType = "text/json",
-                        InputStream = stream
-                    };
-
-                    await client.PutObjectAsync(putRequest);
-                }
             }
         }
     }
