@@ -11,7 +11,7 @@ esac
 
 export PATH=$PATH:$HOME/.local/bin
 
-add-apt-repository ppa:eugenesan/ppa
+add-apt-repository -y ppa:eugenesan/ppa
 apt-get update
 apt-get install jq -y
 
