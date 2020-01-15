@@ -29,9 +29,9 @@ namespace NosCoreBot.Precondition
           IServiceProvider services)
         {
             IGuildUser user = context.User as IGuildUser;
-            if (context.User is IWebhookUser)
+            if (user is IWebhookUser)
             {
-                if (_webhookNames.Contains(user.Nickname))
+                if (_webhookNames.Contains(user.Username))
                 {
                     return Task.FromResult(PreconditionResult.FromSuccess());
                 }
