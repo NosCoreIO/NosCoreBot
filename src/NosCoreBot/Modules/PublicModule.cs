@@ -40,9 +40,6 @@ namespace NosCoreBot.Modules
         [RequireBotPermission(GuildPermission.Administrator)]
         public async Task Clear()
         {
-            var user = Context.User as IUser;
-            await ReplyAsync($"\n channel will be cleared in 5 sec - webhook : {user.IsWebhook} - userName: {user.Username}" );
-            await Task.Delay(5000);
             var clone = (Context.Channel as ITextChannel)?.CloneChannelAsync();
             if (clone != null)
             {
