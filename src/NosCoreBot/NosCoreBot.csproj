@@ -12,7 +12,7 @@
   <ItemGroup>
     <PackageReference Include="AWSSDK.S3" Version="3.3.110.11" />
     <PackageReference Include="Discord.Net" Version="2.1.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.1" />
   </ItemGroup>
 
 </Project>
