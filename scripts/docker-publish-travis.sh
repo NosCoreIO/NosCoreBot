@@ -9,7 +9,7 @@ case "$TRAVIS_BRANCH" in
     ;;  
 esac
 
-docker build -f ../src/NosCoreBot/dockerfile -t noscorebot:$DOCKER_TAG ./src/NosCoreBot --no-cache
+docker build -f ./src/NosCoreBot/dockerfile -t noscorebot:$DOCKER_TAG --no-cache .
 docker tag noscorebot:$DOCKER_TAG $DOCKER_REGISTRY/noscorebot:$DOCKER_TAG
 docker push $DOCKER_REGISTRY/noscorebot:$DOCKER_TAG
 
