@@ -32,7 +32,7 @@ namespace NosCoreBot.Services
         public async Task MessageReceivedAsync(SocketMessage rawMessage)
         {
             if (!(rawMessage is SocketUserMessage message)) { return; }
-            if (message.Source != MessageSource.User) { return; }
+            if (message.Source != MessageSource.User && message.Source != MessageSource.Webhook) { return; }
             var argPos = 0;
             if (!message.HasStringPrefix("/", ref argPos) && !message.HasMentionPrefix(_discord.CurrentUser, ref argPos)) { return; }
 
