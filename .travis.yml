@@ -22,9 +22,7 @@ script:
 deploy:
   skip_cleanup: true
   provider: script
-  script:
-   - ./scripts/dotnet-publish.sh
-   - sudo ./scripts/docker-publish-travis.sh
+  script: bash ./scripts/docker-publish-travis.sh
   after_deploy:
    - ./scripts/after-success.sh
   on:
