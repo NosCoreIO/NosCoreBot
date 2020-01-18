@@ -97,16 +97,16 @@ namespace NosCoreBot.Modules
         {
             var users = await DownloadUsers();
             var userinfo = users.FirstOrDefault(s => s.Username == user.Username);
-            if (userinfo != null)
+            if (userinfo == null)
             {
                 userinfo = new User
                 {
                     Username = user.Username,
                     Points = new Dictionary<PointType, int>
                     {
-                        {PointType.DonationPoint,0 },
-                        {PointType.TranslationPoint,0 },
-                        {PointType.ContributionPoint,0 }
+                        {PointType.DonationPoint, 0 },
+                        {PointType.TranslationPoint, 0 },
+                        {PointType.ContributionPoint, 0 }
                     }
                 };
                 users.Add(userinfo);
