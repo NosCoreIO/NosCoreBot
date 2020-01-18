@@ -8,21 +8,23 @@ addons:
         confinement: classic
         channel: 3.1/stable
 install:
-    - export PATH="$PATH:/home/travis/.dotnet/tools"
-    - export PATH="$PATH:$HOME/.local/bin"
-    - sudo snap alias dotnet-sdk.dotnet dotnet        
-branches:
-  only:
-    - master
+   - export PATH="$PATH:/home/travis/.dotnet/tools"
+   - export PATH="$PATH:$HOME/.local/bin"
+   - sudo snap alias dotnet-sdk.dotnet dotnet  
 global:
-  - DOTNET_SKIP_FIRST_TIME_EXPERIENCE=true
-  - DOTNET_CLI_TELEMETRY_OPTOUT=1
-before_script:
-  - chmod -R a+x scripts
+   - DOTNET_SKIP_FIRST_TIME_EXPERIENCE=true
+   - DOTNET_CLI_TELEMETRY_OPTOUT=1
 script:
-  - ./scripts/dotnet-build.sh
-  - ./scripts/dotnet-test.sh
-  - ./scripts/dotnet-publish.sh
-  - sudo ./scripts/docker-publish-travis.sh
-after_success:
-  - ./scripts/after-success.sh
+   - ./scripts/dotnet-build.sh
+   - ./scripts/dotnet-test.sh
+deploy:
+  provider: script
+  before_script:
+   - chmod -R a+x scripts
+  script:
+   - ./scripts/dotnet-publish.sh
+   - sudo ./scripts/docker-publish-travis.sh
+   - ./scripts/after-success.sh
+  on:
+    branch: master
+
