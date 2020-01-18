@@ -1,3 +1,5 @@
+dotnet publish ./src/NosCoreBot -c Release -o ./bin/Docker
+
 DOCKER_ENV=''
 DOCKER_TAG=''
 DOCKER_REGISTRY='703970026174.dkr.ecr.us-west-2.amazonaws.com'
