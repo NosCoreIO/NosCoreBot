@@ -131,23 +131,37 @@ namespace NosCoreBot.Modules
         [RequireBotPermission(GuildPermission.Administrator)]
         public async Task ShowLeaderboard(SocketGuildUser user = null)
         {
-            var users = user == null ? await DownloadUsers() : await InitializeUser(user);
+            var users = (user == null ? await DownloadUsers() : await InitializeUser(user)).OrderByDescending(s => s.Points[PointType.ContributionPoint] * 10 + s.Points[PointType.DonationPoint] * 5 + s.Points[PointType.TranslationPoint]).ToList();
+            var leaderboard = (user == null ? users :
+                users.Where(s => s.Username == user.Username));
+            var rank = user == null ? 1 : users.FindIndex(s => s.Username == user.Username) + 1; //todo get real rank if user !=null
             var builder = new EmbedBuilder();
+
             builder.WithTitle("Point Leaderboard");
-            var rank = 1; //todo get real rank if user !=null
-            foreach (var userFromList in users)
+
+            var usernames = string.Empty;
+            var points = string.Empty;
+            var ranking = string.Empty;
+            foreach (var userFromList in leaderboard)
             {
-                builder.AddField("Username", userFromList.Username, true);
-                builder.AddField("Donation Translation Contribution", $@"{userFromList.Points[PointType.DonationPoint].ToString().PadRight(8, '\u2000')} {userFromList.Points[PointType.TranslationPoint].ToString().PadRight(9, '\u2000')} {userFromList.Points[PointType.ContributionPoint]}", true);
-                builder.AddField("Ranking",
-                    (rank == 1 ? "🥇" :
+                usernames += $"**{userFromList.Username}**\n";
+                points += $"{userFromList.Points[PointType.DonationPoint].ToString().PadRight(8, '\u2000')} {userFromList.Points[PointType.TranslationPoint].ToString().PadRight(9, '\u2000')} {userFromList.Points[PointType.ContributionPoint]}\n";
+                ranking += (rank == 1 ? "🥇" :
                         (rank == 2 ? "🥈" :
-                            (rank == 3 ? "🥉" : "")))
-                        + rank.Ordinalize(new CultureInfo("en")), true);
-                builder.WithColor(Color.Red);
+                            (rank == 3 ? "🥉" : "\u2728")))
+                    + rank.Ordinalize(new CultureInfo("en")) + "\n";
                 rank++;
+                if (rank == 25)
+                {
+                    break;
+                }
             }
 
+            builder.AddField("Username", usernames, true);
+            builder.AddField("Donation Translation Contribution", points, true);
+            builder.AddField("Ranking", ranking, true);
+            builder.WithColor(Color.Red);
+            builder.WithFooter("Note: The points on the leaderboard don't have the same value.\nContribution:x10 --- Donation:x5 --- Translation:x1");
             await ReplyAsync("", false, builder.Build());
         }
     }
