@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -13,6 +14,7 @@ using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.S3.Transfer;
+using ConsoleTableExt;
 using Discord.WebSocket;
 using Humanizer;
 using Newtonsoft.Json;
@@ -134,22 +136,28 @@ namespace NosCoreBot.Modules
             var users = (user == null ? await DownloadUsers() : await InitializeUser(user)).OrderByDescending(s => s.Points[PointType.ContributionPoint] * 10 + s.Points[PointType.DonationPoint] * 5 + s.Points[PointType.TranslationPoint]).ToList();
             var leaderboard = (user == null ? users :
                 users.Where(s => s.Username == user.Username));
-            var rank = user == null ? 1 : users.FindIndex(s => s.Username == user.Username) + 1; //todo get real rank if user !=null
+            var rank = user == null ? 1 : users.FindIndex(s => s.Username == user.Username) + 1;
             var builder = new EmbedBuilder();
 
             builder.WithTitle("Point Leaderboard");
+            var table = new DataTable();
+            table.Columns.Add("Rank  ", typeof(string));
+            table.Columns.Add("Username ", typeof(string));
+            table.Columns.Add("Donation    ", typeof(int));
+            table.Columns.Add("Translation ", typeof(int));
+            table.Columns.Add("Contribution", typeof(int));
 
-            var usernames = string.Empty;
-            var points = string.Empty;
-            var ranking = string.Empty;
             foreach (var userFromList in leaderboard)
             {
-                usernames += $"**{userFromList.Username}**\n";
-                points += $"{userFromList.Points[PointType.DonationPoint].ToString().PadRight(8, '\u2000')} {userFromList.Points[PointType.TranslationPoint].ToString().PadRight(9, '\u2000')} {userFromList.Points[PointType.ContributionPoint]}\n";
-                ranking += (rank == 1 ? "🥇" :
+                var ranking = (rank == 1 ? "🥇" :
                         (rank == 2 ? "🥈" :
                             (rank == 3 ? "🥉" : "\u2728")))
-                    + rank.Ordinalize(new CultureInfo("en")) + "\n";
+                    + rank.Ordinalize(new CultureInfo("en"));
+                var username = $"**{userFromList.Username}**";
+                var donationPoints = userFromList.Points[PointType.DonationPoint];
+                var translationPoints = userFromList.Points[PointType.TranslationPoint];
+                var contributionPoints = userFromList.Points[PointType.ContributionPoint];
+                table.Rows.Add(ranking, username, donationPoints, translationPoints, contributionPoints);
                 rank++;
                 if (rank == 25)
                 {
@@ -157,9 +165,11 @@ namespace NosCoreBot.Modules
                 }
             }
 
-            builder.AddField("Username", usernames, true);
-            builder.AddField("Donation Translation Contribution", points, true);
-            builder.AddField("Ranking", ranking, true);
+            var text = ConsoleTableBuilder.From(table)
+                .WithFormat(ConsoleTableBuilderFormat.Minimal)
+                .WithOptions(new ConsoleTableBuilderOption { Delimiter = "",DividerString = "", TrimColumn = true})
+                .Export().ToString();
+            builder.AddField(text.Replace(" ", "\u2007\u2007").Split('\n')[0], string.Join('\n', text.Replace(' ', '\u2000').Split('\n').Skip(2)), true);
             builder.WithColor(Color.Red);
             builder.WithFooter("Note: The points on the leaderboard don't have the same value.\nContribution:x10 --- Donation:x5 --- Translation:x1");
             await ReplyAsync("", false, builder.Build());
