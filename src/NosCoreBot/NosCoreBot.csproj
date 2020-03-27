@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" Version="3.3.110.40" />
+    <PackageReference Include="AWSSDK.S3" Version="3.3.110.41" />
     <PackageReference Include="ConsoleTableExt" Version="2.0.2" />
     <PackageReference Include="Discord.Net" Version="2.1.1" />
     <PackageReference Include="Humanizer.Core" Version="2.7.9" />
