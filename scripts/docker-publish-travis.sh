@@ -29,4 +29,4 @@ docker build -f ./src/NosCoreBot/dockerfile -t noscorebot:$DOCKER_TAG --no-cache
 docker tag noscorebot:$DOCKER_TAG $DOCKER_REGISTRY/noscorebot:$DOCKER_TAG
 docker push $DOCKER_REGISTRY/noscorebot:$DOCKER_TAG
 
-ecs-deploy -c noscorebot -n noscorebot-service-fargate -i $DOCKER_REGISTRY/noscorebot:latest  -D 1  --max-definitions 1 --force-new-deployment
+ecs-deploy -c noscorebot -n noscorebot -i $DOCKER_REGISTRY/noscorebot:latest  -D 1  --max-definitions 1 --force-new-deployment
