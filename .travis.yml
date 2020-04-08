@@ -23,8 +23,8 @@ script:
 deploy:
   cleanup: false
   provider: script
-  script: bash ./scripts/docker-publish-travis.sh
+  script: sudo bash ./scripts/docker-publish-travis.sh
   on:
     branch: master
 after_deploy:
-   - ./scripts/after-success.sh
+   - sudo ./scripts/after-success.sh
