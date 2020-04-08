@@ -24,8 +24,7 @@ deploy:
   cleanup: false
   provider: script
   script: bash ./scripts/docker-publish-travis.sh
-  after_deploy:
-   - ./scripts/after-success.sh
   on:
     branch: master
-
+after_deploy:
+   - ./scripts/after-success.sh
