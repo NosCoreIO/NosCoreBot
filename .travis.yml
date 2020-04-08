@@ -1,6 +1,6 @@
 language: csharp
 mono: none
-sudo: required
+os: linux
 dist: xenial
 addons:
     snaps:
@@ -10,17 +10,18 @@ addons:
 install:
    - export PATH="$PATH:/home/travis/.dotnet/tools"
    - export PATH="$PATH:$HOME/.local/bin"
-   - sudo snap alias dotnet-sdk.dotnet dotnet  
-global:
-   - DOTNET_SKIP_FIRST_TIME_EXPERIENCE=true
-   - DOTNET_CLI_TELEMETRY_OPTOUT=1
+   - sudo snap alias dotnet-sdk.dotnet dotnet
+env:
+    global:
+       - DOTNET_SKIP_FIRST_TIME_EXPERIENCE=true
+       - DOTNET_CLI_TELEMETRY_OPTOUT=1
 before_script:
    - chmod -R a+x scripts
 script:
    - ./scripts/dotnet-build.sh
    - ./scripts/dotnet-test.sh
 deploy:
-  skip_cleanup: true
+  cleanup: false
   provider: script
   script: bash ./scripts/docker-publish-travis.sh
   after_deploy:
