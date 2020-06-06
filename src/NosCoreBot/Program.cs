@@ -36,7 +36,7 @@ namespace NosCoreBot
                 await Task.Delay(-1);
             }
         }
-        
+
         private Task LogAsync(LogMessage log)
         {
             Console.WriteLine(log.ToString());
@@ -47,7 +47,10 @@ namespace NosCoreBot
         private ServiceProvider ConfigureServices()
         {
             return new ServiceCollection()
-                .AddSingleton<DiscordSocketClient>()
+                .AddSingleton(new DiscordSocketClient(new DiscordSocketConfig
+                {
+                    AlwaysDownloadUsers = true,
+                }))
                 .AddSingleton<CommandService>()
                 .AddSingleton<CommandHandlingService>()
                 .AddSingleton<HttpClient>()
