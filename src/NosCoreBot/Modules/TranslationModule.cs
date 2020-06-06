@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using Discord;
 using Discord.Commands;
@@ -12,9 +11,8 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Discord.WebSocket;
 using Newtonsoft.Json;
-using NosCoreBot.Enumerations;
-using NosCoreBot.Extensions;
 using Amazon;
+using NosCore.Shared.Enumerations;
 
 namespace NosCoreBot.Modules
 {

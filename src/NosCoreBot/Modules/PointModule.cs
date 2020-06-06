@@ -4,7 +4,6 @@ using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using Discord;
 using Discord.Commands;
@@ -13,13 +12,10 @@ using Amazon;
 using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
-using Amazon.S3.Transfer;
 using ConsoleTableExt;
 using Discord.WebSocket;
 using Humanizer;
 using Newtonsoft.Json;
-using NosCoreBot.Enumerations;
-using NosCoreBot.Extensions;
 using NosCoreBot.Precondition;
 
 namespace NosCoreBot.Modules
