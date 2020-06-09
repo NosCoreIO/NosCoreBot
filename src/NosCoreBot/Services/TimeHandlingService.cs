@@ -151,7 +151,7 @@ namespace NosCoreBot.Services
                 {
                     var file = new FileInfo(tarArchiveName);
                     await channel.SendMessageAsync($"New parser input file archive generated! - Size {(file.Exists ? file.Length : 0)}B");
-                    await channel.SendFileAsync(Path.GetFullPath(tarArchiveName), tarArchiveName);
+                    await channel.SendFileAsync(File.OpenRead(tarArchiveName), "parser-input-files.tar.bz2", tarArchiveName);
                 }
             }
         }
