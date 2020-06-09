@@ -47,7 +47,7 @@ namespace NosCoreBot.Services
 				return;
 			}
             
-            await context.Channel.SendMessageAsync($"error: {result.ToString()}");
+            await context.Channel.SendMessageAsync($"error: {result}");
         }
     }
 }
