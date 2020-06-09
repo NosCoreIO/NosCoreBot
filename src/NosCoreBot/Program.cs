@@ -34,7 +34,7 @@ namespace NosCoreBot
                 await client.StartAsync();
 
                 await services.GetRequiredService<CommandHandlingService>().InitializeAsync();
-                await services.GetRequiredService<TimeHandlingService>().UploadInputFiles();
+                await services.GetRequiredService<TimeHandlingService>().UploadInputFilesAsync();
 
                 await Task.Delay(-1);
             }
