@@ -72,6 +72,11 @@ namespace NosCoreBot.Services
                 Environment.GetEnvironmentVariable("S3_SECRET_KEY")), RegionEndpoint.USWest2);
 
             var manifest = await _client.DownloadManifest();
+            manifest.Entries = manifest.Entries.Select(s =>
+            {
+                s.File = s.File.Replace('\\', Path.DirectorySeparatorChar);
+                return s;
+            }).ToArray();
             var fileslist = _parserInputFiles.Select(o => $"NostaleData{Path.DirectorySeparatorChar}{o}").ToList();
             manifest.Entries = manifest.Entries.Where(s => fileslist.Contains(s.File)).ToArray();
 
@@ -83,11 +88,10 @@ namespace NosCoreBot.Services
             ClientManifest previousManifest;
             try
             {
-                using GetObjectResponse response = await client.GetObjectAsync(request);
-                await using Stream responseStream = response.ResponseStream;
-                using StreamReader reader = new StreamReader(responseStream);
+                using var response = await client.GetObjectAsync(request);
+                await using var responseStream = response.ResponseStream;
+                using var reader = new StreamReader(responseStream);
                 previousManifest = JsonConvert.DeserializeObject<ClientManifest>(await reader.ReadToEndAsync());
-
             }
             catch
             {
@@ -116,7 +120,7 @@ namespace NosCoreBot.Services
                     }
 
                     var directoryOfFilesToBeTarred =
-                        new DirectoryInfo(".{Path.DirectorySeparatorChar}output{Path.DirectorySeparatorChar}parser");
+                        new DirectoryInfo($".{Path.DirectorySeparatorChar}output{Path.DirectorySeparatorChar}parser");
                     var filesInDirectory = directoryOfFilesToBeTarred.GetFiles("*.*", SearchOption.AllDirectories);
 
                     if (File.Exists(tarArchiveName))
