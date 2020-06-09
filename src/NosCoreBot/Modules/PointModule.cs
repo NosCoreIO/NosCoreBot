@@ -43,37 +43,31 @@ namespace NosCoreBot.Modules
                 BucketName = Environment.GetEnvironmentVariable("S3_BUCKET"),
                 Key = "contribution.json",
             };
-            using (var client = new AmazonS3Client(new BasicAWSCredentials(
+            using var client = new AmazonS3Client(new BasicAWSCredentials(
                 Environment.GetEnvironmentVariable("S3_ACCESS_KEY"),
-                Environment.GetEnvironmentVariable("S3_SECRET_KEY")), RegionEndpoint.USWest2))
-            using (GetObjectResponse response = await client.GetObjectAsync(request))
-            using (Stream responseStream = response.ResponseStream)
-            using (StreamReader reader = new StreamReader(responseStream))
-            {
-                return JsonConvert.DeserializeObject<List<User>>(reader.ReadToEnd());
-            }
+                Environment.GetEnvironmentVariable("S3_SECRET_KEY")), RegionEndpoint.USWest2);
+            using GetObjectResponse response = await client.GetObjectAsync(request);
+            await using Stream responseStream = response.ResponseStream;
+            using StreamReader reader = new StreamReader(responseStream);
+            return JsonConvert.DeserializeObject<List<User>>(reader.ReadToEnd());
         }
 
         private async Task UploadUsers(List<User> users)
         {
-            using (var client = new AmazonS3Client(new BasicAWSCredentials(
+            using var client = new AmazonS3Client(new BasicAWSCredentials(
                 Environment.GetEnvironmentVariable("S3_ACCESS_KEY"),
-                Environment.GetEnvironmentVariable("S3_SECRET_KEY")), RegionEndpoint.USWest2))
+                Environment.GetEnvironmentVariable("S3_SECRET_KEY")), RegionEndpoint.USWest2);
+            var emptyfile = JsonConvert.SerializeObject(users);
+            await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(emptyfile));
+            var putRequest = new PutObjectRequest
             {
-                var emptyfile = JsonConvert.SerializeObject(users);
-                using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(emptyfile)))
-                {
-                    var putRequest = new PutObjectRequest
-                    {
-                        BucketName = Environment.GetEnvironmentVariable("S3_BUCKET"),
-                        Key = "contribution.json",
-                        ContentType = "text/json",
-                        InputStream = stream
-                    };
+                BucketName = Environment.GetEnvironmentVariable("S3_BUCKET"),
+                Key = "contribution.json",
+                ContentType = "text/json",
+                InputStream = stream
+            };
 
-                    await client.PutObjectAsync(putRequest);
-                }
-            }
+            await client.PutObjectAsync(putRequest);
         }
 
 

@@ -22,22 +22,20 @@ namespace NosCoreBot
 
         public async Task MainAsync()
         {
-            using (var services = ConfigureServices())
-            {
-                var client = services.GetRequiredService<DiscordSocketClient>();
+            await using var services = ConfigureServices();
+            var client = services.GetRequiredService<DiscordSocketClient>();
 
-                client.Log += LogAsync;
-                services.GetRequiredService<CommandService>().Log += LogAsync;
+            client.Log += LogAsync;
+            services.GetRequiredService<CommandService>().Log += LogAsync;
 
-                // Tokens should be considered secret data, and never hard-coded.
-                await client.LoginAsync(TokenType.Bot, Environment.GetEnvironmentVariable("token"));
-                await client.StartAsync();
+            // Tokens should be considered secret data, and never hard-coded.
+            await client.LoginAsync(TokenType.Bot, Environment.GetEnvironmentVariable("token"));
+            await client.StartAsync();
 
-                await services.GetRequiredService<CommandHandlingService>().InitializeAsync();
-                await services.GetRequiredService<TimeHandlingService>().UploadInputFilesAsync();
+            await services.GetRequiredService<CommandHandlingService>().InitializeAsync();
+            await services.GetRequiredService<TimeHandlingService>().UploadInputFilesAsync();
 
-                await Task.Delay(-1);
-            }
+            await Task.Delay(-1);
         }
 
         private Task LogAsync(LogMessage log)
@@ -54,6 +52,7 @@ namespace NosCoreBot
                 {
                     AlwaysDownloadUsers = true,
                 }))
+                .AddHttpClient()
                 .AddTransient<IExtractor, Extractor>()
                 .AddTransient<IClientDownloader, ClientDownloader>()
                 .AddSingleton<CommandService>()

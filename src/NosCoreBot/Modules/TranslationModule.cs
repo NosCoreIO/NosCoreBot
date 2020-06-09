@@ -25,32 +25,27 @@ namespace NosCoreBot.Modules
         [RequireBotPermission(GuildPermission.Administrator)]
         public async Task ResetI18N()
         {
-            using (var client = new AmazonS3Client(new BasicAWSCredentials(
+            using var client = new AmazonS3Client(new BasicAWSCredentials(
                 Environment.GetEnvironmentVariable("S3_ACCESS_KEY"),
-                Environment.GetEnvironmentVariable("S3_SECRET_KEY")), RegionEndpoint.USWest2))
+                Environment.GetEnvironmentVariable("S3_SECRET_KEY")), RegionEndpoint.USWest2);
+            var newList = new Dictionary<RegionType, List<string>>();
+            foreach (var type in Enum.GetValues(typeof(RegionType)).Cast<RegionType>())
             {
-
-                var newList = new Dictionary<RegionType, List<string>>();
-                foreach (var type in Enum.GetValues(typeof(RegionType)).Cast<RegionType>())
-                {
-                    newList.Add(type, new List<string>());
-                }
-
-                var emptyfile = JsonConvert.SerializeObject(newList);
-                using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(emptyfile)))
-                {
-                    var putRequest = new PutObjectRequest
-                    {
-                        BucketName = Environment.GetEnvironmentVariable("S3_BUCKET"),
-                        Key = Environment.GetEnvironmentVariable("S3_KEY"),
-                        ContentType = "text/json",
-                        InputStream = stream
-                    };
-
-                    await client.PutObjectAsync(putRequest);
-                    await ReplyAsync("I18N cleared!");
-                }
+                newList.Add(type, new List<string>());
             }
+
+            var emptyfile = JsonConvert.SerializeObject(newList);
+            await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(emptyfile));
+            var putRequest = new PutObjectRequest
+            {
+                BucketName = Environment.GetEnvironmentVariable("S3_BUCKET"),
+                Key = Environment.GetEnvironmentVariable("S3_KEY"),
+                ContentType = "text/json",
+                InputStream = stream
+            };
+
+            await client.PutObjectAsync(putRequest);
+            await ReplyAsync("I18N cleared!");
         }
 
         [Command("translation")]
@@ -60,7 +55,7 @@ namespace NosCoreBot.Modules
         {
             if (Context.Channel.Name == "translation-info")
             {
-                var role = Context.Guild.Roles.FirstOrDefault(r => r.Name == $"Translator({region.ToString()})");
+                var role = Context.Guild.Roles.FirstOrDefault(r => r.Name == $"Translator({region})");
                 if (role == null)
                 {
                     await ReplyAsync("the role doesn't exist.");

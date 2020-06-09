@@ -8,7 +8,7 @@ namespace NosCoreBot.Precondition
 {
     public class RequireUserPermissionOrWebhookAttribute : RequireUserPermissionAttribute
     {
-        private string[] _webhookNames;
+        private readonly string[] _webhookNames;
 
         public RequireUserPermissionOrWebhookAttribute(Discord.GuildPermission permission, string[] webhookNames) : base(permission)
         {
@@ -29,11 +29,7 @@ namespace NosCoreBot.Precondition
             IGuildUser user = context.User as IGuildUser;
             if (context.User.IsWebhook)
             {
-                if (_webhookNames.Contains(context.User.Username))
-                {
-                    return Task.FromResult(PreconditionResult.FromSuccess());
-                }
-                return Task.FromResult(PreconditionResult.FromError("Command must be used by an authorized webhook."));
+                return Task.FromResult(_webhookNames.Contains(context.User.Username) ? PreconditionResult.FromSuccess() : PreconditionResult.FromError("Command must be used by an authorized webhook."));
             }
 
             if (this.GuildPermission.HasValue)
