@@ -130,10 +130,8 @@ namespace NosCoreBot.Services
                 await using Stream targetStream = new BZip2OutputStream(File.Create(tarArchiveName));
                 using var tarArchive =
                     TarArchive.CreateOutputTarArchive(targetStream, TarBuffer.DefaultBlockFactor);
-                var files = "";
                 foreach (var fileToBeTarred in filesInDirectory)
                 {
-                    files += fileToBeTarred.FullName;
                     var entry = TarEntry.CreateEntryFromFile(fileToBeTarred.FullName);
                     tarArchive.WriteEntry(entry, true);
                 }
@@ -151,7 +149,6 @@ namespace NosCoreBot.Services
                 await client.PutObjectAsync(putRequest);
                 if (_discord.GetChannel(719772084968095775) is SocketTextChannel channel)
                 {
-                    await channel.SendMessageAsync(files);
                     var file = new FileInfo(tarArchiveName);
                     await channel.SendMessageAsync($"New parser input file archive generated! - Size {(file.Exists ? file.Length : 0)}B");
                     await channel.SendFileAsync(Path.GetFullPath(tarArchiveName), "");
