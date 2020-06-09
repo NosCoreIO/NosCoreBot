@@ -13,6 +13,7 @@ using Amazon.S3.Model;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using ICSharpCode.SharpZipLib.BZip2;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using NosCore.ParserInputGenerator.Downloader;
@@ -109,8 +110,12 @@ namespace NosCoreBot.Services
 
                 var directoryOfFilesToBeTarred = new DirectoryInfo(".\\output\\parser");
                 var filesInDirectory = directoryOfFilesToBeTarred.GetFiles("*.*", SearchOption.AllDirectories);
-                var tarArchiveName = ".\\output\\parser-input-files.tar.gz";
-                await using Stream targetStream = new GZipOutputStream(File.Create(tarArchiveName));
+                var tarArchiveName = ".\\output\\parser-input-files.tar.bz2";
+                if (File.Exists(tarArchiveName))
+                {
+                    File.Delete(tarArchiveName);
+                }
+                await using Stream targetStream = new BZip2OutputStream(File.Create(tarArchiveName));
                 using var tarArchive = TarArchive.CreateOutputTarArchive(targetStream, TarBuffer.DefaultBlockFactor);
                 foreach (var fileToBeTarred in filesInDirectory)
                 {
@@ -132,7 +137,7 @@ namespace NosCoreBot.Services
                 if (_discord.GetChannel(719772084968095775) is SocketTextChannel channel)
                 {
                     await channel.SendMessageAsync($"New parser input file archive generated! - Size {new FileInfo(tarArchiveName).Length}B");
-                    await channel.SendFileAsync(tarArchiveName, "");
+                    await channel.SendFileAsync(tarArchiveName, "parser input file");
                 }
             }
         }
