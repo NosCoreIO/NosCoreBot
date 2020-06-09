@@ -5,6 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
+using NosCore.ParserInputGenerator.Downloader;
+using NosCore.ParserInputGenerator.Extractor;
 using NosCoreBot.Services;
 
 namespace NosCoreBot
@@ -32,6 +34,7 @@ namespace NosCoreBot
                 await client.StartAsync();
 
                 await services.GetRequiredService<CommandHandlingService>().InitializeAsync();
+                await services.GetRequiredService<TimeHandlingService>().UploadInputFilesAsync();
 
                 await Task.Delay(-1);
             }
@@ -51,8 +54,11 @@ namespace NosCoreBot
                 {
                     AlwaysDownloadUsers = true,
                 }))
+                .AddTransient<IExtractor, Extractor>()
+                .AddTransient<IClientDownloader, ClientDownloader>()
                 .AddSingleton<CommandService>()
                 .AddSingleton<CommandHandlingService>()
+                .AddSingleton<TimeHandlingService>()
                 .AddSingleton<HttpClient>()
                 .BuildServiceProvider();
         }
