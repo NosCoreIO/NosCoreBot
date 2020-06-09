@@ -72,7 +72,7 @@ namespace NosCoreBot.Services
                 Environment.GetEnvironmentVariable("S3_SECRET_KEY")), RegionEndpoint.USWest2);
 
             var manifest = await _client.DownloadManifest();
-            var fileslist = _parserInputFiles.Select(o => $"NostaleData{Path.DirectorySeparatorChar}{o}").ToList();
+            var fileslist = _parserInputFiles.Select(o => $"NostaleData\\{o}").ToList();
             manifest.Entries = manifest.Entries.Where(s => fileslist.Contains(s.File)).ToArray();
 
             var request = new GetObjectRequest
@@ -83,9 +83,9 @@ namespace NosCoreBot.Services
             ClientManifest previousManifest;
             try
             {
-                using GetObjectResponse response = await client.GetObjectAsync(request);
-                await using Stream responseStream = response.ResponseStream;
-                using StreamReader reader = new StreamReader(responseStream);
+                using var response = await client.GetObjectAsync(request);
+                await using var responseStream = response.ResponseStream;
+                using var reader = new StreamReader(responseStream);
                 previousManifest = JsonConvert.DeserializeObject<ClientManifest>(await reader.ReadToEndAsync());
 
             }
