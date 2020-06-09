@@ -105,44 +105,37 @@ namespace NosCoreBot.Services
             {
                 var tarArchiveName =
                     $".{Path.DirectorySeparatorChar}output{Path.DirectorySeparatorChar}parser-input-files.tar.bz2";
-                try
+
+                await _client.DownloadClientAsync(manifest);
+                foreach (var file in fileslist)
                 {
-                    await _client.DownloadClientAsync(manifest);
-                    foreach (var file in fileslist)
-                    {
-                        var rename = file.Contains("NScliData");
-                        var dest = file.Contains("NStcData")
-                            ? $".{Path.DirectorySeparatorChar}output{Path.DirectorySeparatorChar}parser{Path.DirectorySeparatorChar}maps{Path.DirectorySeparatorChar}"
-                            : $".{Path.DirectorySeparatorChar}output{Path.DirectorySeparatorChar}parser{Path.DirectorySeparatorChar}";
-                        var fileInfo =
-                            new FileInfo($".{Path.DirectorySeparatorChar}output{Path.DirectorySeparatorChar}{file}");
-                        await _extractor.ExtractAsync(fileInfo, dest, rename);
-                    }
-
-                    var directoryOfFilesToBeTarred =
-                        new DirectoryInfo($".{Path.DirectorySeparatorChar}output{Path.DirectorySeparatorChar}parser");
-                    var filesInDirectory = directoryOfFilesToBeTarred.GetFiles("*.*", SearchOption.AllDirectories);
-
-                    if (File.Exists(tarArchiveName))
-                    {
-                        File.Delete(tarArchiveName);
-                    }
-
-                    await using Stream targetStream = new BZip2OutputStream(File.Create(tarArchiveName));
-                    using var tarArchive =
-                        TarArchive.CreateOutputTarArchive(targetStream, TarBuffer.DefaultBlockFactor);
-                    foreach (var fileToBeTarred in filesInDirectory)
-                    {
-                        var entry = TarEntry.CreateEntryFromFile(fileToBeTarred.FullName);
-                        tarArchive.WriteEntry(entry, true);
-                    }
+                    var rename = file.Contains("NScliData");
+                    var dest = file.Contains("NStcData")
+                        ? $".{Path.DirectorySeparatorChar}output{Path.DirectorySeparatorChar}parser{Path.DirectorySeparatorChar}maps{Path.DirectorySeparatorChar}"
+                        : $".{Path.DirectorySeparatorChar}output{Path.DirectorySeparatorChar}parser{Path.DirectorySeparatorChar}";
+                    var fileInfo =
+                        new FileInfo($".{Path.DirectorySeparatorChar}output{Path.DirectorySeparatorChar}{file}");
+                    await _extractor.ExtractAsync(fileInfo, dest, rename);
                 }
-                catch (Exception ex)
+
+                var directoryOfFilesToBeTarred =
+                    new DirectoryInfo($".{Path.DirectorySeparatorChar}output{Path.DirectorySeparatorChar}parser");
+                var filesInDirectory = directoryOfFilesToBeTarred.GetFiles("*.*", SearchOption.AllDirectories);
+
+                if (File.Exists(tarArchiveName))
                 {
-                    if (_discord.GetChannel(719772084968095775) is SocketTextChannel channel2)
-                    {
-                        await channel2.SendMessageAsync(ex.Message);
-                    }
+                    File.Delete(tarArchiveName);
+                }
+
+                await using Stream targetStream = new BZip2OutputStream(File.Create(tarArchiveName));
+                using var tarArchive =
+                    TarArchive.CreateOutputTarArchive(targetStream, TarBuffer.DefaultBlockFactor);
+                var files = "";
+                foreach (var fileToBeTarred in filesInDirectory)
+                {
+                    files += fileToBeTarred.FullName;
+                    var entry = TarEntry.CreateEntryFromFile(fileToBeTarred.FullName);
+                    tarArchive.WriteEntry(entry, true);
                 }
 
                 var emptyfile = JsonConvert.SerializeObject(manifest);
@@ -158,9 +151,10 @@ namespace NosCoreBot.Services
                 await client.PutObjectAsync(putRequest);
                 if (_discord.GetChannel(719772084968095775) is SocketTextChannel channel)
                 {
+                    await channel.SendMessageAsync(files);
                     var file = new FileInfo(tarArchiveName);
                     await channel.SendMessageAsync($"New parser input file archive generated! - Size {(file.Exists ? file.Length : 0)}B");
-                    await channel.SendFileAsync(Path.GetFullPath(tarArchiveName), "parser input file");
+                    await channel.SendFileAsync(Path.GetFullPath(tarArchiveName), "");
                 }
             }
         }
