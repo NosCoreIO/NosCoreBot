@@ -137,7 +137,7 @@ namespace NosCoreBot.Services
                 if (_discord.GetChannel(719772084968095775) is SocketTextChannel channel)
                 {
                     await channel.SendMessageAsync($"New parser input file archive generated! - Size {new FileInfo(tarArchiveName).Length}B");
-                    await channel.SendFileAsync(tarArchiveName, "parser input file");
+                    await channel.SendFileAsync(Path.GetFullPath(tarArchiveName), "parser input file");
                 }
             }
         }
