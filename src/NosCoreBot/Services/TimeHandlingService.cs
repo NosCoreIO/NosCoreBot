@@ -105,7 +105,7 @@ namespace NosCoreBot.Services
             }
 
             var previoussha1s = previousManifest.Entries.Select(s => s.Sha1);
-            if (true || !manifest.Entries.Select(s => s.Sha1).All(s => previoussha1s.Contains(s)))
+            if (!manifest.Entries.Select(s => s.Sha1).All(s => previoussha1s.Contains(s)))
             {
                 var archiveName =
                     $".{Path.DirectorySeparatorChar}output{Path.DirectorySeparatorChar}parser-input-files.tar.bz2";
