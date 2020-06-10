@@ -23,6 +23,7 @@ using NosCoreBot.Modules;
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
+using ICSharpCode.SharpZipLib.Zip;
 
 namespace NosCoreBot.Services
 {
@@ -88,10 +89,12 @@ namespace NosCoreBot.Services
             ClientManifest previousManifest;
             try
             {
-                using var response = await client.GetObjectAsync(request);
-                await using var responseStream = response.ResponseStream;
-                using var reader = new StreamReader(responseStream);
-                previousManifest = JsonConvert.DeserializeObject<ClientManifest>(await reader.ReadToEndAsync());
+                {
+                    using var response = await client.GetObjectAsync(request);
+                    await using var responseStream = response.ResponseStream;
+                    using var reader = new StreamReader(responseStream);
+                    previousManifest = JsonConvert.DeserializeObject<ClientManifest>(await reader.ReadToEndAsync());
+                }
             }
             catch
             {
@@ -100,14 +103,15 @@ namespace NosCoreBot.Services
                     Entries = new Entry[0]
                 };
             }
+
             var previoussha1s = previousManifest.Entries.Select(s => s.Sha1);
-            if (!manifest.Entries.Select(s => s.Sha1).All(s => previoussha1s.Contains(s)))
+            if (true || !manifest.Entries.Select(s => s.Sha1).All(s => previoussha1s.Contains(s)))
             {
-                var tarArchiveName =
+                var archiveName =
                     $".{Path.DirectorySeparatorChar}output{Path.DirectorySeparatorChar}parser-input-files.tar.bz2";
 
                 await _client.DownloadClientAsync(manifest);
-                foreach (var file in fileslist)
+                await Task.WhenAll(fileslist.Select(file =>
                 {
                     var rename = file.Contains("NScliData");
                     var dest = file.Contains("NStcData")
@@ -115,43 +119,55 @@ namespace NosCoreBot.Services
                         : $".{Path.DirectorySeparatorChar}output{Path.DirectorySeparatorChar}parser{Path.DirectorySeparatorChar}";
                     var fileInfo =
                         new FileInfo($".{Path.DirectorySeparatorChar}output{Path.DirectorySeparatorChar}{file}");
-                    await _extractor.ExtractAsync(fileInfo, dest, rename);
-                }
+                    return _extractor.ExtractAsync(fileInfo, dest, rename);
+                }));
 
                 var directoryOfFilesToBeTarred =
-                    new DirectoryInfo($".{Path.DirectorySeparatorChar}output{Path.DirectorySeparatorChar}parser");
-                var filesInDirectory = directoryOfFilesToBeTarred.GetFiles("*.*", SearchOption.AllDirectories);
+                    $".{Path.DirectorySeparatorChar}output{Path.DirectorySeparatorChar}parser";
+                var filesInDirectory = Directory.GetFiles(directoryOfFilesToBeTarred, "*.*", SearchOption.AllDirectories);
 
-                if (File.Exists(tarArchiveName))
+                if (File.Exists(archiveName))
                 {
-                    File.Delete(tarArchiveName);
+                    File.Delete(archiveName);
                 }
 
-                await using Stream targetStream = new BZip2OutputStream(File.Create(tarArchiveName));
-                using var tarArchive =
-                    TarArchive.CreateOutputTarArchive(targetStream, TarBuffer.DefaultBlockFactor);
-                foreach (var fileToBeTarred in filesInDirectory)
+                await Task.Delay(10000);
                 {
-                    var entry = TarEntry.CreateEntryFromFile(fileToBeTarred.FullName);
-                    tarArchive.WriteEntry(entry, true);
+                    await using var targetStream = new BZip2OutputStream(File.Create(archiveName));
+                    using var tarArchive =
+                        TarArchive.CreateOutputTarArchive(targetStream, TarBuffer.DefaultBlockFactor);
+                    foreach (var file in filesInDirectory)
+                    {
+                        var entry = TarEntry.CreateEntryFromFile(file);
+                        tarArchive.WriteEntry(entry, true);
+                    }
                 }
 
                 var emptyfile = JsonConvert.SerializeObject(manifest);
-                await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(emptyfile));
-                var putRequest = new PutObjectRequest
                 {
-                    BucketName = Environment.GetEnvironmentVariable("S3_BUCKET"),
-                    Key = "clientmanifest.json",
-                    ContentType = "text/json",
-                    InputStream = stream
-                };
+                    await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(emptyfile));
+                    var putRequest = new PutObjectRequest
+                    {
+                        BucketName = Environment.GetEnvironmentVariable("S3_BUCKET"),
+                        Key = "clientmanifest.json",
+                        ContentType = "text/json",
+                        InputStream = stream
+                    };
+                    await client.PutObjectAsync(putRequest);
+                }
 
-                await client.PutObjectAsync(putRequest);
                 if (_discord.GetChannel(719772084968095775) is SocketTextChannel channel)
                 {
-                    var file = new FileInfo(tarArchiveName);
-                    await channel.SendMessageAsync($"New parser input file archive generated! - Size {(file.Exists ? file.Length : 0)}B");
-                    await channel.SendFileAsync(tarArchiveName, "File");
+                    var file = new FileInfo(archiveName);
+                    if (file.Length > 8388119)
+                    {
+                        var send = await channel.SendMessageAsync($"<:altz:699420721088168036><:altz:699420721088168036><:altz:699420721088168036>Parser Too Heavy<:altz:699420721088168036><:altz:699420721088168036><:altz:699420721088168036>\n - Size : {file.Length}");
+                    }
+                    else
+                    {
+                        var alq = string.Concat(Enumerable.Repeat("<:altq:699420721130242159>", 20));
+                        var send = await channel.SendFileAsync(archiveName, $"{alq}\n<:altp:699420720819732651><:altp:699420720819732651><:altp:699420720819732651><:altp:699420720819732651><:altp:699420720819732651><:altp:699420720819732651>PARSER FILES GENERATED<:altp:699420720819732651><:altp:699420720819732651><:altp:699420720819732651><:altp:699420720819732651><:altp:699420720819732651><:altp:699420720819732651>\n{alq}");
+                    }
                 }
             }
         }
