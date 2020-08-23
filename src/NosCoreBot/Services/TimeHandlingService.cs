@@ -115,7 +115,7 @@ namespace NosCoreBot.Services
                 {
                     var rename = file.Contains("NScliData");
                     var dest = file.Contains("NStcData")
-                        ? $".{Path.DirectorySeparatorChar}output{Path.DirectorySeparatorChar}parser{Path.DirectorySeparatorChar}maps{Path.DirectorySeparatorChar}"
+                        ? $".{Path.DirectorySeparatorChar}output{Path.DirectorySeparatorChar}parser{Path.DirectorySeparatorChar}map{Path.DirectorySeparatorChar}"
                         : $".{Path.DirectorySeparatorChar}output{Path.DirectorySeparatorChar}parser{Path.DirectorySeparatorChar}";
                     var fileInfo =
                         new FileInfo($".{Path.DirectorySeparatorChar}output{Path.DirectorySeparatorChar}{file}");
