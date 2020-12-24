@@ -16,7 +16,7 @@
     <PackageReference Include="Humanizer.Core" Version="2.8.26" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
     <PackageReference Include="NosCore.ParserInputGenerator" Version="1.2.0" />
-    <PackageReference Include="NosCore.Shared" Version="1.11.2" />
+    <PackageReference Include="NosCore.Shared" Version="1.13.1" />
   </ItemGroup>
 
 </Project>
