@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/runtime:5.0
+FROM mcr.microsoft.com/dotnet/aspnet:5.0
 WORKDIR /dotnetapp
 COPY ./bin/Docker .
 ENTRYPOINT ["dotnet", "NosCoreBot.dll"]
