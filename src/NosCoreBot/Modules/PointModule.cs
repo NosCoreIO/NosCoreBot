@@ -157,9 +157,33 @@ namespace NosCoreBot.Modules
 
             var text = ConsoleTableBuilder.From(table)
                 .WithFormat(ConsoleTableBuilderFormat.Minimal)
-                .WithOptions(new ConsoleTableBuilderOption { Delimiter = "",DividerString = "", TrimColumn = true})
+                .TrimColumn()
                 .Export().ToString();
-            builder.AddField(text.Replace(" ", "\u2007\u2007").Split('\n')[0], string.Join('\n', text.Replace(' ', '\u2000').Split('\n').Skip(2)), true);
+            var title = text.Replace(" ", "\u2007\u2007").Split('\n')[0];
+            var contentarray = text.Replace(' ', '\u2000').Split('\n');
+            var currentSize = 0;
+            var content = "";
+            for (var i = 2; i < contentarray.Length; i++)
+            {
+                var contentToAdd = string.Join('\n', contentarray[i]);
+                if (currentSize + contentToAdd.Length > 1024)
+                {
+                    currentSize = 0;
+                    builder.AddField(title, content, false);
+                    content = "";
+                    title = "";
+                }
+
+                currentSize += contentToAdd.Length;
+                content += contentToAdd;
+
+                if (i + 1 == contentarray.Length)
+                {
+                    currentSize = 0;
+                    builder.AddField(title, content, false);
+                    content = "";
+                }
+            }
             builder.WithColor(Color.Red);
             builder.WithFooter("Note: The points on the leaderboard don't have the same value.\nContribution:x10 --- Donation:x5 --- Translation:x1");
             await ReplyAsync("", false, builder.Build());
