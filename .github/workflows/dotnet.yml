@@ -19,7 +19,7 @@ jobs:
       run: |
         dotnet restore
         dotnet build
-        dotnet tests ./tests/NosCoreBot.Tests/NosCoreBot.Tests.csproj -v m
+        dotnet tests
         
     - name: Deploy
       if: github.ref == 'refs/heads/master'
