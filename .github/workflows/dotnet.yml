@@ -46,4 +46,4 @@ jobs:
       if: github.ref == 'refs/heads/master'
       uses: brunocascio/ecs-deploy@v2.0.0
       with:
-        args: deploy noscorebot-cluster noscorebot -i production/noscorebot:latest --max-definitions 1 --force-new-deployment
+        args: deploy noscorebot-cluster noscorebot -i production/noscorebot:latest
