@@ -45,8 +45,8 @@ jobs:
 
         # install ecs-deploy
         curl https://raw.githubusercontent.com/silinternational/ecs-deploy/master/ecs-deploy | \
-          sudo tee -a /usr/bin/ecs-deploy
-        sudo chmod +x /usr/bin/ecs-deploy
+           tee -a /usr/bin/ecs-deploy
+        chmod +x /usr/bin/ecs-deploy
 
         pip install --user awscli
 
