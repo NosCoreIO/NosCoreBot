@@ -37,10 +37,6 @@ jobs:
         
     - name: Deploy to Amazon ECS
       if: github.ref == 'refs/heads/master'
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      uses: brunocascio/ecs-deploy@v2.0.0
       with:
-        task-definition: task-definition.json
-        service: noscorebot
-        cluster: noscorebot-cluster
-        wait-for-service-stability: true    
-        force-new-deployment: true
+        args: deploy noscorebot-cluster noscorebot -i production/noscorebot:latest --max-definitions 1 --force-new-deployment
