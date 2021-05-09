@@ -44,7 +44,7 @@ jobs:
         
       run: |
         docker build -f ./src/NosCoreBot/dockerfile -t noscorebot:$IMAGE_TAG --no-cache .
-        docker tag noscorebot:$IMAGE_TAG $DOCKER_REGISTRY/noscorebot:$IMAGE_TAG
+        docker tag noscorebot:$IMAGE_TAG $ECR_REGISTRY/noscorebot:$IMAGE_TAG
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
