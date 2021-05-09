@@ -4,7 +4,7 @@ DOCKER_ENV=''
 DOCKER_TAG=''
 DOCKER_REGISTRY='703970026174.dkr.ecr.us-west-2.amazonaws.com'
 
-case "$TRAVIS_BRANCH" in
+case "${GITHUB_REF##*/}" in
   "master")
     DOCKER_ENV=production
     DOCKER_TAG=latest
