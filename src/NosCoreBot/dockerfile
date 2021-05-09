@@ -2,6 +2,6 @@ FROM mcr.microsoft.com/dotnet/aspnet:5.0
 WORKDIR /dotnetapp
 
 COPY . /app
-WORKDIR /app/build/bin
+WORKDIR /app/build/net5.0
 
 ENTRYPOINT ["dotnet", "NosCoreBot.dll"]
