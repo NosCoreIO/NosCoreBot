@@ -34,7 +34,14 @@ jobs:
         secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         region: us-west-2
         image: noscorebot:latest
-        
+     
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }} 
+
     - name: Deploy to Amazon ECS
       if: github.ref == 'refs/heads/master'
       uses: brunocascio/ecs-deploy@v2.0.0
