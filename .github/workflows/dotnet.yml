@@ -20,20 +20,6 @@ jobs:
         dotnet restore
         dotnet build
         dotnet test tests/NosCoreBot.Tests -v m
-        
-    - name: Build Docker
-      if: github.ref == 'refs/heads/master'
-      run: |
-        docker build -f ./src/NosCoreBot/dockerfile -t noscorebot:latest --no-cache .
-        
-    - name: Push to ECR
-      if: github.ref == 'refs/heads/master'
-      uses: jwalton/gh-ecr-push@v1
-      with:
-        access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        region: us-west-2
-        image: noscorebot:latest
      
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
@@ -41,6 +27,23 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-west-2
+        
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+      
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: noscorebot
+        IMAGE_TAG: latest
+        
+      run: |
+        docker build -f ./src/NosCoreBot/dockerfile -t noscorebot:$IMAGE_TAG --no-cache .
+        docker tag noscorebot:$IMAGE_TAG $DOCKER_REGISTRY/noscorebot:$IMAGE_TAG
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
     - name: Deploy to Amazon ECS
       if: github.ref == 'refs/heads/master'
