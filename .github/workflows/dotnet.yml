@@ -50,6 +50,8 @@ jobs:
 
     - name: Deploy to Amazon ECS
       if: github.ref == 'refs/heads/master'
-      uses: brunocascio/ecs-deploy@v2.0.0
+      uses: donaldpiret/ecs-deploy@master
       with:
-        args: deploy noscorebot-cluster noscorebot -i production/noscorebot:latest
+        cluster: noscorebot-cluster
+        target: noscorebot
+        tag: latest
