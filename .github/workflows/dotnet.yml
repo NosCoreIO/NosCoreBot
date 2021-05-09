@@ -21,9 +21,13 @@ jobs:
         dotnet build
         dotnet test tests/NosCoreBot.Tests -v m
         
-    - run: |
+    - name: Build Docker
+      if: github.ref == 'refs/heads/master'
+      run: |
         docker build -f ./src/NosCoreBot/dockerfile -t noscorebot:latest --no-cache .
+        
     - name: Push to ECR
+      if: github.ref == 'refs/heads/master'
       uses: jwalton/gh-ecr-push@v1
       with:
         access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -32,6 +36,7 @@ jobs:
         image: noscorebot:latest
         
     - name: Deploy to Amazon ECS
+      if: github.ref == 'refs/heads/master'
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
       with:
         task-definition: task-definition.json
