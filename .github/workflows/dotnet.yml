@@ -52,6 +52,6 @@ jobs:
       if: github.ref == 'refs/heads/master'
       uses: donaldpiret/ecs-deploy@master
       with:
-        cluster: noscorebot-cluster
+        cluster: discordbot-cluster
         target: noscorebot
         tag: latest
