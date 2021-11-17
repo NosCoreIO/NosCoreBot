@@ -171,7 +171,7 @@ namespace NosCoreBot.Modules
                     currentSize = 0;
                     builder.AddField(title, content, false);
                     content = "";
-                    title = "";
+                    title = "---";
                 }
 
                 currentSize += contentToAdd.Length;
