@@ -14,7 +14,7 @@
     <PackageReference Include="ConsoleTableExt" Version="3.1.9" />
     <PackageReference Include="Discord.Net" Version="3.1.0" />
     <PackageReference Include="Humanizer.Core" Version="2.13.14" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.1" />
     <PackageReference Include="NosCore.ParserInputGenerator" Version="2.0.0" />
     <PackageReference Include="NosCore.Shared" Version="3.4.0" />
   </ItemGroup>
