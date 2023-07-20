@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" Version="3.7.104.30" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.200.2" />
     <PackageReference Include="ConsoleTableExt" Version="3.2.0" />
     <PackageReference Include="Discord.Net" Version="3.10.0" />
     <PackageReference Include="Humanizer.Core" Version="2.14.1" />
