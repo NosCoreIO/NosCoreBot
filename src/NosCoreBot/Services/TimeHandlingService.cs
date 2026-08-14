@@ -159,7 +159,7 @@ namespace NosCoreBot.Services
                 if (_discord.GetChannel(719772084968095775) is SocketTextChannel channel)
                 {
                     var file = new FileInfo(archiveName);
-                    if (file.Length > 8388119)
+                    if ((ulong)file.Length > channel.Guild.MaxUploadLimit)
                     {
                         var send = await channel.SendMessageAsync($"<:altz:699420721088168036><:altz:699420721088168036><:altz:699420721088168036>Parser Too Heavy<:altz:699420721088168036><:altz:699420721088168036><:altz:699420721088168036>\n - Size : {file.Length}");
                     }
