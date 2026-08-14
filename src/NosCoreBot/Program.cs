@@ -26,10 +26,11 @@ namespace NosCoreBot
                 .UseWindowsService()
                 .ConfigureServices((hostContext, services) =>
                 {
+                    var runOnce = Environment.GetEnvironmentVariable("RUN_ONCE") == "true";
                     services.AddSingleton(new DiscordSocketClient(new DiscordSocketConfig
                     {
-                        AlwaysDownloadUsers = true,
-                        GatewayIntents = GatewayIntents.All
+                        AlwaysDownloadUsers = !runOnce,
+                        GatewayIntents = runOnce ? GatewayIntents.Guilds : GatewayIntents.All
                     }))
                         .AddHttpClient()
                         .AddTransient<IExtractor, Extractor>()
