@@ -51,7 +51,7 @@ jobs:
 
     - name: Deploy to Amazon ECS
       if: github.ref == 'refs/heads/master'
-      uses: donaldpiret/ecs-deploy@1ecf7b109ad634c6391b486298b9ddeebca378cd # v0.3.0
+      uses: donaldpiret/ecs-deploy@b4c35d42b679ca60f35fa383cfbd71bcc9248a06 # master 2026-08 (v0.3.0 + dep CVE bumps)
       with:
         cluster: discordbot-cluster
         target: noscorebot
