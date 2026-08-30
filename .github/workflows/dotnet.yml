@@ -9,7 +9,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
+      with:
+        persist-credentials: false
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
@@ -23,7 +25,7 @@ jobs:
      
     - name: Configure AWS Credentials
       if: github.ref == 'refs/heads/master'
-      uses: aws-actions/configure-aws-credentials@v1
+      uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -32,7 +34,7 @@ jobs:
     - name: Login to Amazon ECR
       if: github.ref == 'refs/heads/master'
       id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
+      uses: aws-actions/amazon-ecr-login@v2
       
     - name: Build, tag, and push image to Amazon ECR
       if: github.ref == 'refs/heads/master'
@@ -43,14 +45,13 @@ jobs:
         IMAGE_TAG: latest
         
       run: |
-        docker build -f ./src/NosCoreBot/dockerfile -t noscorebot:$IMAGE_TAG --no-cache .
+        docker build -f ./src/NosCoreBot/dockerfile -t noscorebot:$IMAGE_TAG .
         docker tag noscorebot:$IMAGE_TAG $ECR_REGISTRY/noscorebot:$IMAGE_TAG
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
     - name: Deploy to Amazon ECS
       if: github.ref == 'refs/heads/master'
-      uses: donaldpiret/ecs-deploy@master
+      uses: donaldpiret/ecs-deploy@b4c35d42b679ca60f35fa383cfbd71bcc9248a06 # master 2026-08 (v0.3.0 + dep CVE bumps)
       with:
         cluster: discordbot-cluster
         target: noscorebot
