@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        persist-credentials: false
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
@@ -49,7 +51,7 @@ jobs:
 
     - name: Deploy to Amazon ECS
       if: github.ref == 'refs/heads/master'
-      uses: donaldpiret/ecs-deploy@v0.3.0
+      uses: donaldpiret/ecs-deploy@1ecf7b109ad634c6391b486298b9ddeebca378cd # v0.3.0
       with:
         cluster: discordbot-cluster
         target: noscorebot
