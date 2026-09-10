@@ -33,10 +33,8 @@ public class SponsorModule : ModuleBase<SocketCommandContext>
     [RequireUserPermission(GuildPermission.ManageRoles)]
     public async Task LinkSponsor(SocketGuildUser user, string platform, string id)
     {
-        var state = await _sponsors.LoadStateAsync();
         var key = $"{platform.ToLowerInvariant()}:{id}";
-        state.Links[key] = user.Id;
-        await _sponsors.SaveStateAsync(state);
+        await _sponsors.MutateAsync(state => state.Links[key] = user.Id);
         await ReplyAsync($"Linked {user.Mention} to `{key}`. Roles apply on the next sync.");
     }
 
@@ -46,16 +44,10 @@ public class SponsorModule : ModuleBase<SocketCommandContext>
     [RequireUserPermission(GuildPermission.ManageRoles)]
     public async Task UnlinkSponsor(string platform, string id)
     {
-        var state = await _sponsors.LoadStateAsync();
         var key = $"{platform.ToLowerInvariant()}:{id}";
-        if (!state.Links.Remove(key))
-        {
-            await ReplyAsync($"No link for `{key}`.");
-            return;
-        }
-
-        await _sponsors.SaveStateAsync(state);
-        await ReplyAsync($"Unlinked `{key}`.");
+        var removed = false;
+        await _sponsors.MutateAsync(state => removed = state.Links.Remove(key));
+        await ReplyAsync(removed ? $"Unlinked `{key}`." : $"No link for `{key}`.");
     }
 
     [Command("sponsor-sync")]
@@ -64,8 +56,7 @@ public class SponsorModule : ModuleBase<SocketCommandContext>
     [RequireUserPermission(GuildPermission.ManageRoles)]
     public async Task SyncNow()
     {
-        var state = await _sponsors.LoadStateAsync();
-        await _sync.RunAsync(state);
+        var state = await _sync.RunAsync(_ => true);
         await ReplyAsync($"Synced {state.Snapshot.Count} sponsors.");
     }
 
@@ -82,7 +73,6 @@ public class SponsorModule : ModuleBase<SocketCommandContext>
             return;
         }
 
-        var lines = state.Links.Select(link => $"`{link.Key}` -> <@{link.Value}>");
-        await ReplyAsync(string.Join('\n', lines));
+        await ReplyAsync(string.Join('\n', state.Links.Select(link => $"`{link.Key}` -> <@{link.Value}>")));
     }
 }

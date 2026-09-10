@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.Runtime;
@@ -17,8 +18,8 @@ using Microsoft.Extensions.Logging;
 
 namespace NosCoreBot.Services;
 
-public record SponsorEntry(string Platform, string Id, string DisplayName, bool IsPublic, int MonthlyCents,
-    int LifetimeCents)
+public record SponsorEntry(string Platform, string Id, string DisplayName, bool IsPublic, bool IsActive,
+    int MonthlyCents, int LifetimeCents)
 {
     public string Key => $"{Platform}:{Id}";
 }
@@ -26,6 +27,8 @@ public record SponsorEntry(string Platform, string Id, string DisplayName, bool 
 public class SponsorState
 {
     public Dictionary<string, ulong> Links { get; set; } = new();
+
+    public Dictionary<string, int> Lifetime { get; set; } = new();
 
     public List<SponsorEntry> Snapshot { get; set; } = new();
 
@@ -39,10 +42,12 @@ public class SponsorService
     private const string StateKey = "sponsors.json";
 
     private const string SponsorsQuery = """
-        query($login: String!) {
+        query($login: String!, $cursor: String) {
           user(login: $login) {
-            sponsorshipsAsMaintainer(first: 100, includePrivate: true, activeOnly: false) {
+            sponsorshipsAsMaintainer(first: 100, after: $cursor, includePrivate: true, activeOnly: false) {
+              pageInfo { hasNextPage endCursor }
               nodes {
+                isActive
                 privacyLevel
                 createdAt
                 isOneTimePayment
@@ -60,6 +65,7 @@ public class SponsorService
 
     private readonly HttpClient _httpClient;
     private readonly ILogger<SponsorService> _logger;
+    private readonly SemaphoreSlim _stateLock = new(1, 1);
 
     public SponsorService(HttpClient httpClient, ILogger<SponsorService> logger)
     {
@@ -72,10 +78,7 @@ public class SponsorService
         var entries = new List<SponsorEntry>();
         entries.AddRange(await FetchGitHubAsync());
         entries.AddRange(await FetchPatreonAsync());
-        return entries
-            .OrderByDescending(entry => entry.LifetimeCents)
-            .ThenByDescending(entry => entry.MonthlyCents)
-            .ToList();
+        return entries;
     }
 
     private async Task<List<SponsorEntry>> FetchGitHubAsync()
@@ -88,61 +91,72 @@ public class SponsorService
         }
 
         var login = Environment.GetEnvironmentVariable("GITHUB_SPONSORS_LOGIN") ?? "0Lucifer0";
-        var payload = JsonSerializer.Serialize(new
-        {
-            query = SponsorsQuery,
-            variables = new { login }
-        });
-
-        using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.github.com/graphql");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        request.Headers.UserAgent.ParseAdd("NosCoreBot");
-        request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
-
-        using var response = await _httpClient.SendAsync(request);
-        if (!response.IsSuccessStatusCode)
-        {
-            _logger.LogWarning("GitHub Sponsors returned {Status}", response.StatusCode);
-            return new List<SponsorEntry>();
-        }
-
-        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        if (document.RootElement.TryGetProperty("errors", out var errors))
-        {
-            _logger.LogWarning("GitHub Sponsors query failed: {Errors}", errors.ToString());
-            return new List<SponsorEntry>();
-        }
-
         var entries = new List<SponsorEntry>();
-        var nodes = document.RootElement
-            .GetProperty("data").GetProperty("user")
-            .GetProperty("sponsorshipsAsMaintainer").GetProperty("nodes");
+        string cursor = null;
 
-        foreach (var node in nodes.EnumerateArray())
+        do
         {
-            var isPublic = node.GetProperty("privacyLevel").GetString() == "PUBLIC";
-            var isOneTime = node.GetProperty("isOneTimePayment").GetBoolean();
-            var createdAt = node.GetProperty("createdAt").GetDateTimeOffset();
-            var monthlyCents = node.TryGetProperty("tier", out var tier) && tier.ValueKind == JsonValueKind.Object
-                ? tier.GetProperty("monthlyPriceInCents").GetInt32()
-                : 0;
-
-            var sponsor = node.GetProperty("sponsorEntity");
-            if (sponsor.ValueKind != JsonValueKind.Object)
+            var payload = JsonSerializer.Serialize(new
             {
-                continue;
+                query = SponsorsQuery,
+                variables = new { login, cursor }
+            });
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.github.com/graphql");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Headers.UserAgent.ParseAdd("NosCoreBot");
+            request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+
+            using var response = await _httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("GitHub Sponsors returned {Status}", response.StatusCode);
+                return entries;
             }
 
-            var id = sponsor.GetProperty("login").GetString()!;
-            var name = sponsor.TryGetProperty("name", out var nameElement)
-                && nameElement.ValueKind == JsonValueKind.String
-                    ? nameElement.GetString()!
-                    : id;
+            using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+            if (document.RootElement.TryGetProperty("errors", out var errors))
+            {
+                _logger.LogWarning("GitHub Sponsors query failed: {Errors}", errors.ToString());
+                return entries;
+            }
 
-            entries.Add(new SponsorEntry("github", id, name, isPublic,
-                isOneTime ? 0 : monthlyCents,
-                isOneTime ? monthlyCents : monthlyCents * MonthsSince(createdAt)));
-        }
+            var sponsorships = document.RootElement
+                .GetProperty("data").GetProperty("user")
+                .GetProperty("sponsorshipsAsMaintainer");
+
+            foreach (var node in sponsorships.GetProperty("nodes").EnumerateArray())
+            {
+                var sponsor = node.GetProperty("sponsorEntity");
+                if (sponsor.ValueKind != JsonValueKind.Object)
+                {
+                    continue;
+                }
+
+                var isActive = node.GetProperty("isActive").GetBoolean();
+                var isOneTime = node.GetProperty("isOneTimePayment").GetBoolean();
+                var createdAt = node.GetProperty("createdAt").GetDateTimeOffset();
+                var monthlyCents = node.TryGetProperty("tier", out var tier) && tier.ValueKind == JsonValueKind.Object
+                    ? tier.GetProperty("monthlyPriceInCents").GetInt32()
+                    : 0;
+
+                var id = sponsor.GetProperty("login").GetString()!;
+                var name = sponsor.TryGetProperty("name", out var nameElement)
+                    && nameElement.ValueKind == JsonValueKind.String
+                        ? nameElement.GetString()!
+                        : id;
+
+                entries.Add(new SponsorEntry("github", id, name,
+                    node.GetProperty("privacyLevel").GetString() == "PUBLIC", isActive,
+                    isActive && !isOneTime ? monthlyCents : 0,
+                    isOneTime ? monthlyCents : monthlyCents * MonthsSince(createdAt)));
+            }
+
+            var pageInfo = sponsorships.GetProperty("pageInfo");
+            cursor = pageInfo.GetProperty("hasNextPage").GetBoolean()
+                ? pageInfo.GetProperty("endCursor").GetString()
+                : null;
+        } while (cursor != null);
 
         return entries;
     }
@@ -163,38 +177,75 @@ public class SponsorService
         }
 
         var namesArePublic = Environment.GetEnvironmentVariable("PATREON_NAMES_PUBLIC") == "true";
+        var entries = new List<SponsorEntry>();
         var url = $"https://www.patreon.com/api/oauth2/v2/campaigns/{campaignId}/members"
             + "?fields%5Bmember%5D=full_name,patron_status,currently_entitled_amount_cents,lifetime_support_cents"
             + "&page%5Bcount%5D=100";
 
-        using var request = new HttpRequestMessage(HttpMethod.Get, url);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-        using var response = await _httpClient.SendAsync(request);
-        if (!response.IsSuccessStatusCode)
+        while (url != null)
         {
-            _logger.LogWarning("Patreon returned {Status}", response.StatusCode);
-            return new List<SponsorEntry>();
-        }
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        var entries = new List<SponsorEntry>();
-        foreach (var member in document.RootElement.GetProperty("data").EnumerateArray())
-        {
-            var attributes = member.GetProperty("attributes");
-            var lifetime = attributes.GetProperty("lifetime_support_cents").GetInt32();
-            if (lifetime <= 0)
+            using var response = await _httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
             {
-                continue;
+                _logger.LogWarning("Patreon returned {Status}", response.StatusCode);
+                return entries;
             }
 
-            var isActive = attributes.GetProperty("patron_status").GetString() == "active_patron";
-            entries.Add(new SponsorEntry("patreon", member.GetProperty("id").GetString()!,
-                attributes.GetProperty("full_name").GetString() ?? "Patron", namesArePublic,
-                isActive ? attributes.GetProperty("currently_entitled_amount_cents").GetInt32() : 0, lifetime));
+            using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+            foreach (var member in document.RootElement.GetProperty("data").EnumerateArray())
+            {
+                var attributes = member.GetProperty("attributes");
+                var lifetime = attributes.GetProperty("lifetime_support_cents").GetInt32();
+                if (lifetime <= 0)
+                {
+                    continue;
+                }
+
+                var isActive = attributes.GetProperty("patron_status").GetString() == "active_patron";
+                entries.Add(new SponsorEntry("patreon", member.GetProperty("id").GetString()!,
+                    attributes.GetProperty("full_name").GetString() ?? "Patron", namesArePublic, isActive,
+                    isActive ? attributes.GetProperty("currently_entitled_amount_cents").GetInt32() : 0, lifetime));
+            }
+
+            url = NextPatreonPage(document);
         }
 
         return entries;
+    }
+
+    private static string NextPatreonPage(JsonDocument document)
+    {
+        return document.RootElement.TryGetProperty("meta", out var meta)
+            && meta.TryGetProperty("pagination", out var pagination)
+            && pagination.TryGetProperty("cursors", out var cursors)
+            && cursors.TryGetProperty("next", out var next)
+            && next.ValueKind == JsonValueKind.String
+                ? next.GetString()
+                : null;
+    }
+
+    public static List<SponsorEntry> ApplyLifetimeFloor(SponsorState state, IEnumerable<SponsorEntry> fetched)
+    {
+        var entries = new List<SponsorEntry>();
+        foreach (var entry in fetched)
+        {
+            var known = state.Lifetime.TryGetValue(entry.Key, out var stored) ? stored : 0;
+            var lifetime = entry.IsActive
+                ? Math.Max(known, entry.LifetimeCents)
+                : known > 0
+                    ? known
+                    : entry.LifetimeCents;
+            state.Lifetime[entry.Key] = lifetime;
+            entries.Add(entry with { LifetimeCents = lifetime });
+        }
+
+        return entries
+            .OrderByDescending(entry => entry.LifetimeCents)
+            .ThenByDescending(entry => entry.MonthlyCents)
+            .ToList();
     }
 
     public async Task<SponsorState> LoadStateAsync()
@@ -216,7 +267,32 @@ public class SponsorService
         }
     }
 
-    public async Task SaveStateAsync(SponsorState state)
+    public async Task<SponsorState> MutateAsync(Func<SponsorState, Task> mutation)
+    {
+        await _stateLock.WaitAsync();
+        try
+        {
+            var state = await LoadStateAsync();
+            await mutation(state);
+            await SaveStateAsync(state);
+            return state;
+        }
+        finally
+        {
+            _stateLock.Release();
+        }
+    }
+
+    public Task<SponsorState> MutateAsync(Action<SponsorState> mutation)
+    {
+        return MutateAsync(state =>
+        {
+            mutation(state);
+            return Task.CompletedTask;
+        });
+    }
+
+    private async Task SaveStateAsync(SponsorState state)
     {
         state.UpdatedAt = DateTime.UtcNow;
         using var client = CreateS3Client();

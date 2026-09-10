@@ -43,16 +43,7 @@ public class SponsorSyncService
     {
         try
         {
-            var reportHour = int.TryParse(Environment.GetEnvironmentVariable("SPONSOR_REPORT_HOUR"), out var hour)
-                ? hour
-                : 9;
-            var state = await _sponsors.LoadStateAsync();
-            if (DateTime.UtcNow.Hour != reportHour || state.LastReportUtc?.Date == DateTime.UtcNow.Date)
-            {
-                return;
-            }
-
-            await RunAsync(state);
+            await RunAsync(ShouldPublish);
         }
         catch (Exception exception)
         {
@@ -60,30 +51,56 @@ public class SponsorSyncService
         }
     }
 
-    public async Task RunAsync(SponsorState state)
+    private static bool ShouldPublish(SponsorState state)
     {
-        state.Snapshot = await _sponsors.FetchAsync();
-        state.LastReportUtc = DateTime.UtcNow;
-        await _sponsors.SaveStateAsync(state);
+        var reportHour = int.TryParse(Environment.GetEnvironmentVariable("SPONSOR_REPORT_HOUR"), out var hour)
+            ? hour
+            : 9;
+        return DateTime.UtcNow.Hour == reportHour && state.LastReportUtc?.Date != DateTime.UtcNow.Date;
+    }
 
-        var guild = GetGuild();
-        if (guild == null)
+    public async Task<SponsorState> RunAsync(Func<SponsorState, bool> shouldPublish)
+    {
+        var fetched = await _sponsors.FetchAsync();
+        var published = false;
+
+        var state = await _sponsors.MutateAsync(async current =>
         {
-            _logger.LogWarning("SPONSOR_GUILD_ID is unset or the bot is not in that guild");
-            return;
+            current.Snapshot = SponsorService.ApplyLifetimeFloor(current, fetched);
+
+            var guild = GetGuild();
+            if (guild == null)
+            {
+                _logger.LogWarning("SPONSOR_GUILD_ID is unset or the bot is not in that guild");
+                return;
+            }
+
+            await SyncRolesAsync(guild, current);
+
+            if (!shouldPublish(current))
+            {
+                return;
+            }
+
+            if (ulong.TryParse(Environment.GetEnvironmentVariable("SPONSOR_CHANNEL_ID"), out var channelId)
+                && guild.GetTextChannel(channelId) is { } channel)
+            {
+                await channel.SendMessageAsync(embed: BuildEmbed(current.Snapshot));
+                current.LastReportUtc = DateTime.UtcNow;
+                published = true;
+            }
+            else
+            {
+                _logger.LogWarning("SPONSOR_CHANNEL_ID is unset or not a text channel in the guild");
+            }
+        });
+
+        if (published)
+        {
+            _logger.LogInformation("Posted the sponsor leaderboard with {Count} entries", state.Snapshot.Count);
         }
 
-        await SyncRolesAsync(guild, state);
-
-        if (ulong.TryParse(Environment.GetEnvironmentVariable("SPONSOR_CHANNEL_ID"), out var channelId)
-            && guild.GetTextChannel(channelId) is { } channel)
-        {
-            await channel.SendMessageAsync(embed: BuildEmbed(state.Snapshot));
-        }
-        else
-        {
-            _logger.LogWarning("SPONSOR_CHANNEL_ID is unset or not a text channel in the guild");
-        }
+        return state;
     }
 
     private SocketGuild GetGuild()
@@ -129,18 +146,23 @@ public class SponsorSyncService
     public async Task SyncRolesAsync(SocketGuild guild, SponsorState state)
     {
         var roles = await EnsureRolesAsync(guild);
-        var topSponsor = state.Snapshot.FirstOrDefault();
+        var topSponsor = state.Snapshot.FirstOrDefault(entry => entry.IsActive);
+        var wantedByMember = new Dictionary<ulong, HashSet<string>>();
 
         foreach (var entry in state.Snapshot)
         {
-            if (!state.Links.TryGetValue(entry.Key, out var discordId)
-                || guild.GetUser(discordId) is not { } member)
+            if (!state.Links.TryGetValue(entry.Key, out var discordId))
             {
                 continue;
             }
 
+            if (!wantedByMember.TryGetValue(discordId, out var wanted))
+            {
+                wanted = new HashSet<string>();
+                wantedByMember[discordId] = wanted;
+            }
+
             var earned = Tiers.FirstOrDefault(tier => entry.MonthlyCents >= tier.MinimumCents).Name;
-            var wanted = new List<string>();
             if (earned != null)
             {
                 wanted.Add(earned);
@@ -150,7 +172,18 @@ public class SponsorSyncService
             {
                 wanted.Add(TopSponsorRole);
             }
+        }
 
+        var managedIds = roles.Values.Select(role => role.Id).ToHashSet();
+        var members = wantedByMember.Keys
+            .Select(guild.GetUser)
+            .Where(member => member != null)
+            .Concat(guild.Users.Where(member => member.Roles.Any(role => managedIds.Contains(role.Id))))
+            .DistinctBy(member => member.Id);
+
+        foreach (var member in members)
+        {
+            var wanted = wantedByMember.TryGetValue(member.Id, out var names) ? names : new HashSet<string>();
             foreach (var (name, role) in roles)
             {
                 var hasRole = member.Roles.Any(memberRole => memberRole.Id == role.Id);
