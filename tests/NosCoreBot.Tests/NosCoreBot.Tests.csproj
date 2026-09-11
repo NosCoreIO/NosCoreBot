@@ -12,4 +12,8 @@
     <PackageReference Include="MSTest.TestFramework" Version="4.3.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\NosCoreBot\NosCoreBot.csproj" />
+  </ItemGroup>
+
 </Project>
