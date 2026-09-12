@@ -21,15 +21,17 @@ public class Worker : BackgroundService
     private readonly CommandService _cmservice;
     private readonly CommandHandlingService _chservice;
     private readonly TimeHandlingService _thservice;
+    private readonly SponsorSyncService _sponsorsync;
     private readonly IHostApplicationLifetime _lifetime;
 
     public Worker(DiscordSocketClient client, CommandService cmservice, CommandHandlingService chservice,
-        TimeHandlingService thservice, IHostApplicationLifetime lifetime)
+        TimeHandlingService thservice, SponsorSyncService sponsorsync, IHostApplicationLifetime lifetime)
     {
         _client = client;
         _cmservice = cmservice;
         _chservice = chservice;
         _thservice = thservice;
+        _sponsorsync = sponsorsync;
         _lifetime = lifetime;
     }
 
@@ -65,6 +67,7 @@ public class Worker : BackgroundService
         }
 
         await _chservice.InitializeAsync();
+        _sponsorsync.Start();
         await _thservice.UploadInputFilesAsync();
 
         await Task.Delay(-1, stoppingToken);
