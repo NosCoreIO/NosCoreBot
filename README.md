@@ -20,6 +20,22 @@
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/A3562BQV)
 <a href='https://www.patreon.com/bePatron?u=6503887' target='_blank'><img height='46' style='border:0px;height:46px;' src='https://c5.patreon.com/external/logo/become_a_patron_button@2x.png' border='0' alt='Become a Patron!' /></a>
 
+## Sponsor leaderboard ##
+`/sponsors` shows the leaderboard. Once a day the bot refreshes it from the funding platforms, posts it to a channel and applies sponsor roles.
+
+| Variable | Purpose |
+|---|---|
+| `GITHUB_SPONSORS_TOKEN` | PAT with `read:user`. Without it GitHub Sponsors is skipped |
+| `GITHUB_SPONSORS_LOGIN` | maintainer login, defaults to `0Lucifer0` |
+| `PATREON_ACCESS_TOKEN`, `PATREON_CAMPAIGN_ID` | creator token and campaign. Without them Patreon is skipped |
+| `PATREON_NAMES_PUBLIC` | `true` to show Patreon names. They are anonymised otherwise, because the Patreon API exposes no privacy flag |
+| `SPONSOR_GUILD_ID`, `SPONSOR_CHANNEL_ID` | where the report is posted and roles are applied |
+| `SPONSOR_REPORT_HOUR` | UTC hour of the daily post, defaults to 9 |
+
+The `Supporter`, `Gold Supporter`, `Legendary Supporter` and `Top Sponsor` roles are created on the first sync — the bot's own role has to sit above them for it to assign them. A sponsor only gets a role once someone links their accounts with `/link-sponsor <user> github <login>`, since no funding platform exposes a sponsor's Discord identity.
+
+Sponsors who chose to stay private are listed as `Anonymous` with their amount. GitHub lifetime totals are estimated from tier price and start date, which is all its API exposes; Patreon reports exact lifetime totals. Ko-fi is not included — it has no read API, only webhooks.
+
 ## Warning! ##
 We are not responsible of any damages caused by bad usage of our source. Please before asking questions or installing this source read this readme and also do a research, google is your friend. If you mess up when installing our source because you didnt follow it, we will laugh at you. A lot.
 
