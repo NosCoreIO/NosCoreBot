@@ -38,6 +38,8 @@ namespace NosCoreBot
                         .AddSingleton<CommandService>()
                         .AddSingleton<CommandHandlingService>()
                         .AddSingleton<TimeHandlingService>()
+                        .AddSingleton<SponsorService>()
+                        .AddSingleton<SponsorSyncService>()
                         .AddSingleton<HttpClient>()
                         .BuildServiceProvider();
                     services.AddHostedService<Worker>();
