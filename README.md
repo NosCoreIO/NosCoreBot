@@ -15,19 +15,25 @@ publishes the latest parser input files when the client's data archives change.
 
 ## Commands
 
+A command starts with `/` (`/help`), or follows a mention of the bot.
+
 | Command | What it does |
 |---|---|
-| `help` | Lists the commands |
-| `add-points`, `info-points`, `leaderboard` | Gives, shows and ranks members' points |
-| `delete-message`, `clear` | Removes messages |
-| `translation` | Gives the translator roles |
-| `reset-i18n` | Resets the i18n file |
+| `/help` | Lists the commands |
+| `/add-points`, `/info-points`, `/leaderboard` | Gives, shows and ranks members' points |
+| `/delete-message <amount>` | Deletes the last messages |
+| `/clear` | Replaces the channel with an empty copy that keeps its settings, permissions and webhooks |
+| `/translation <language>` | In `translation-info` only: gives that language's translator role, or takes it back if you already have it |
+| `/reset-i18n` | Empties the list of missing translations |
 
 ## Running
 
-The bot reads its settings from the environment: `token` (the Discord bot token), and `S3_ACCESS_KEY`,
-`S3_SECRET_KEY` and `S3_BUCKET` for publishing the parser input files. `RUN_ONCE=true` runs the publishing job once and
-exits.
+The bot reads its settings from the environment: `token` (the Discord bot token); `S3_ACCESS_KEY`,
+`S3_SECRET_KEY` and `S3_BUCKET` for the bucket it publishes the parser input files to; and `S3_KEY`, the object
+`reset-i18n` writes. `RUN_ONCE=true` runs the publishing job once and exits.
+
+The points commands read `contribution.json` from the bucket and never create it, so upload one holding `[]` before
+using them on a new bucket.
 
 ```bash
 dotnet build
