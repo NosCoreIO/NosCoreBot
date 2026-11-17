@@ -12,11 +12,18 @@ namespace NosCoreBot.Modules
         private const string AnnouncementChannelName = "general";
 
         [Command("contributor")]
-        [Name("contributor <user> <message?>")]
+        [Name("contributor <user>")]
         [Summary("Give the Contributor role and announce it in #general")]
         [RequireUserPermission(GuildPermission.Administrator)]
         [RequireBotPermission(GuildPermission.ManageRoles)]
-        public async Task Contributor(SocketGuildUser user, [Remainder] string message = null)
+        public Task Contributor(SocketGuildUser user) => Contributor(user, null);
+
+        [Command("contributor")]
+        [Name("contributor <user> <message>")]
+        [Summary("Give the Contributor role and announce it in #general with a custom thank-you")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        [RequireBotPermission(GuildPermission.ManageRoles)]
+        public async Task Contributor(SocketGuildUser user, [Remainder] string message)
         {
             var role = Context.Guild.Roles.FirstOrDefault(r => r.Name == ContributorRoleName);
             if (role == null)
@@ -25,13 +32,10 @@ namespace NosCoreBot.Modules
                 return;
             }
 
-            if (user.Roles.Any(r => r.Id == role.Id))
+            if (user.Roles.All(r => r.Id != role.Id))
             {
-                await ReplyAsync($"{user.DisplayName} is already a {ContributorRoleName}.");
-                return;
+                await user.AddRoleAsync(role);
             }
-
-            await user.AddRoleAsync(role);
 
             var channel = Context.Guild.TextChannels.FirstOrDefault(c => c.Name == AnnouncementChannelName)
                 ?? (ISocketMessageChannel)Context.Channel;

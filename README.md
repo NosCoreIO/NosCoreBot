@@ -24,7 +24,8 @@ A command starts with `/` (`/help`), or follows a mention of the bot.
 | `/delete-message <amount>` | Deletes the last messages |
 | `/clear` | Replaces the channel with an empty copy that keeps its settings, permissions and webhooks |
 | `/contributor <user> [message]` | Admins only: gives the Contributor role and announces it in `general`, with the message if given |
-| `/role-add <user> <role>`, `/role-remove <user> <role>` | Admins only: gives or takes away a role |
+| `/role-add <user> <role>` | Admins only: gives a role |
+| `/role-remove <user> <role>` | Admins only: takes a role away |
 | `/reset-i18n` | Empties the list of missing translations |
 
 ## Running
