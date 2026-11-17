@@ -20,10 +20,11 @@ A command starts with `/` (`/help`), or follows a mention of the bot.
 | Command | What it does |
 |---|---|
 | `/help` | Lists the commands |
-| `/add-points`, `/info-points`, `/leaderboard` | Gives, shows and ranks members' points |
+| `/add-points <user> <type> <amount>`, `/info-points`, `/leaderboard` | Gives, shows and ranks members' points. Types: `ContributionPoint` (code, x10), `DonationPoint` (x5), `PacketPoint` (packet logs, x5); past `TranslationPoint`s still count x1 |
 | `/delete-message <amount>` | Deletes the last messages |
 | `/clear` | Replaces the channel with an empty copy that keeps its settings, permissions and webhooks |
-| `/translation <language>` | In `translation-info` only: gives that language's translator role, or takes it back if you already have it |
+| `/contributor <user> [message]` | Admins only: gives the Contributor role and announces it in `general`, with the message if given |
+| `/role-add <user> <role>`, `/role-remove <user> <role>` | Admins only: gives or takes away a role |
 | `/reset-i18n` | Empties the list of missing translations |
 
 ## Running
