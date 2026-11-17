@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
-using Discord.WebSocket;
 using Newtonsoft.Json;
 using Amazon;
 using NosCore.Shared.Enumerations;
@@ -46,34 +45,6 @@ namespace NosCoreBot.Modules
 
             await client.PutObjectAsync(putRequest);
             await ReplyAsync("I18N cleared!");
-        }
-
-        [Command("translation")]
-        [Name("translation <language>")]
-        [Summary("Give the translator roles (You have to be on #translation-info)")]
-        public async Task Translation(RegionType region)
-        {
-            if (Context.Channel.Name == "translation-info")
-            {
-                var role = Context.Guild.Roles.FirstOrDefault(r => r.Name == $"Translator({region})");
-                if (role == null)
-                {
-                    await ReplyAsync("the role doesn't exist.");
-                    return;
-                }
-
-                var user = (SocketGuildUser)Context.User;
-                if (role.Members.Any(r => r.Username == user.Username))
-                {
-                    await user.RemoveRoleAsync(role);
-                    await ReplyAsync($"{user.Username} lost the role {role.Name}.");
-                }
-                else
-                {
-                    await user.AddRoleAsync(role);
-                    await ReplyAsync($"{user.Username} got the role {role.Name}.");
-                }
-            }
         }
     }
 }

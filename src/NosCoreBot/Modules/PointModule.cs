@@ -24,7 +24,8 @@ namespace NosCoreBot.Modules
     {
         DonationPoint,
         TranslationPoint,
-        ContributionPoint
+        ContributionPoint,
+        PacketPoint
     }
 
     public class User
@@ -32,6 +33,11 @@ namespace NosCoreBot.Modules
         public string Username { get; set; }
 
         public Dictionary<PointType, int> Points { get; set; }
+
+        public int Get(PointType type) => Points.GetValueOrDefault(type);
+
+        public int Score => Get(PointType.ContributionPoint) * 10 + Get(PointType.DonationPoint) * 5
+            + Get(PointType.PacketPoint) * 5 + Get(PointType.TranslationPoint);
     }
 
     public class PointModule : ModuleBase<SocketCommandContext>
@@ -80,7 +86,7 @@ namespace NosCoreBot.Modules
         {
             var points = await InitializeUser(user);
             var userinfo = points.FirstOrDefault(s => s.Username == user.Username);
-            userinfo.Points[type] += amount;
+            userinfo.Points[type] = userinfo.Get(type) + amount;
             await UploadUsers(points);
             await ShowLeaderboard(user);
         }
@@ -98,7 +104,8 @@ namespace NosCoreBot.Modules
                     {
                         {PointType.DonationPoint, 0 },
                         {PointType.TranslationPoint, 0 },
-                        {PointType.ContributionPoint, 0 }
+                        {PointType.ContributionPoint, 0 },
+                        {PointType.PacketPoint, 0 }
                     }
                 };
                 users.Add(userinfo);
@@ -123,7 +130,7 @@ namespace NosCoreBot.Modules
         [RequireBotPermission(GuildPermission.Administrator)]
         public async Task ShowLeaderboard(SocketGuildUser user = null)
         {
-            var users = (user == null ? await DownloadUsers() : await InitializeUser(user)).OrderByDescending(s => s.Points[PointType.ContributionPoint] * 10 + s.Points[PointType.DonationPoint] * 5 + s.Points[PointType.TranslationPoint]).ToList();
+            var users = (user == null ? await DownloadUsers() : await InitializeUser(user)).OrderByDescending(s => s.Score).ToList();
             var leaderboard = (user == null ? users :
                 users.Where(s => s.Username == user.Username));
             var rank = user == null ? 1 : users.FindIndex(s => s.Username == user.Username) + 1;
@@ -134,7 +141,7 @@ namespace NosCoreBot.Modules
             table.Columns.Add("Rank  ", typeof(string));
             table.Columns.Add("Username ", typeof(string));
             table.Columns.Add("Donation    ", typeof(int));
-            table.Columns.Add("Translation ", typeof(int));
+            table.Columns.Add("Packets     ", typeof(int));
             table.Columns.Add("Contribution", typeof(int));
 
             foreach (var userFromList in leaderboard)
@@ -144,10 +151,8 @@ namespace NosCoreBot.Modules
                             (rank == 3 ? "🥉" : "\u2728")))
                     + rank.Ordinalize(new CultureInfo("en"));
                 var username = $"**{userFromList.Username}**";
-                var donationPoints = userFromList.Points[PointType.DonationPoint];
-                var translationPoints = userFromList.Points[PointType.TranslationPoint];
-                var contributionPoints = userFromList.Points[PointType.ContributionPoint];
-                table.Rows.Add(ranking, username, donationPoints, translationPoints, contributionPoints);
+                table.Rows.Add(ranking, username, userFromList.Get(PointType.DonationPoint),
+                    userFromList.Get(PointType.PacketPoint), userFromList.Get(PointType.ContributionPoint));
                 rank++;
                 if (rank == 25)
                 {
@@ -185,7 +190,7 @@ namespace NosCoreBot.Modules
                 }
             }
             builder.WithColor(Color.Red);
-            builder.WithFooter("Note: The points on the leaderboard don't have the same value.\nContribution:x10 --- Donation:x5 --- Translation:x1");
+            builder.WithFooter("Note: The points on the leaderboard don't have the same value.\nContribution:x10 --- Donation:x5 --- Packets:x5 (past translation points still count x1)");
             await ReplyAsync("", false, builder.Build());
         }
     }
